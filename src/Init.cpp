@@ -77,10 +77,12 @@ LRESULT CALLBACK SimplyFlat::SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
         case WM_LBUTTONDOWN:
         {
+            Interface->MouseEvent(true, true);
             return 0;
         }
         case WM_LBUTTONUP:
         {
+            Interface->MouseEvent(true, false);
             return 0;
         }
 
@@ -95,10 +97,12 @@ LRESULT CALLBACK SimplyFlat::SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
         case WM_RBUTTONDOWN:
         {
+            Interface->MouseEvent(false, true);
             return 0;
         }
         case WM_RBUTTONUP:
         {
+            Interface->MouseEvent(false, false);
             return 0;
         }
 

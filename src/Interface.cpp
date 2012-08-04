@@ -8,13 +8,18 @@ SimplyFlat::t_Interface::t_Interface()
         keys[i] = false;
         handlers[i] = NULL;
     }
+
+    for (uint32 i = 0; i < MOUSE_BUTTON_MAX; i++)
+        mousebuttons[i] = false;
+
+    mousehandler = NULL;
 }
 
 SimplyFlat::t_Interface::~t_Interface()
 {
 }
 
-void SimplyFlat::t_Interface::HookEvent(uint16 key, void (*handler)(bool))
+void SimplyFlat::t_Interface::HookEvent(uint16 key, void (*handler)(uint16,bool))
 {
     if (handler == NULL)
         return;
@@ -35,6 +40,19 @@ void SimplyFlat::t_Interface::KeyEvent(uint16 key, bool press)
         keys[key] = press;
 
         if (handlers[key] != NULL)
-            (handlers[key])(press);
+            (handlers[key])(key,press);
     }
+}
+
+void SimplyFlat::t_Interface::MouseEvent(bool left, bool press)
+{
+    mousebuttons[left?MOUSE_BUTTON_LEFT:MOUSE_BUTTON_RIGHT] = press;
+
+    if (mousehandler)
+        mousehandler(left,press);
+}
+
+void SimplyFlat::t_Interface::HookMouseEvent(void (*handler)(bool, bool))
+{
+    mousehandler = handler;
 }

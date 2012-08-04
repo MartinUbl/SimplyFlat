@@ -14,6 +14,13 @@
 
 #define KEY_COUNT 256
 
+enum MouseButtons
+{
+    MOUSE_BUTTON_LEFT  = 0,
+    MOUSE_BUTTON_RIGHT = 1,
+    MOUSE_BUTTON_MAX
+};
+
 #define COLOR(r,g,b) (uint32(r) << 16 | uint32(g) << 8 | uint32(b))
 
 class SimplyFlat
@@ -38,13 +45,20 @@ class SimplyFlat
                 t_Interface();
                 ~t_Interface();
                 bool IsKeyPressed(uint16 key) { if (key < KEY_COUNT) return keys[key]; else return false; };
+                bool IsMouseButtonPressed(MouseButtons button) { return mousebuttons[button]; };
                 bool HasHookedEvent(uint16 key) { if (key < KEY_COUNT) return (handlers[key] != NULL); else return true; };
-                void HookEvent(uint16 key, void (*handler)(bool));
+                bool HasHookedMouseEvent() { return mousehandler != NULL; };
+                void HookEvent(uint16 key, void (*handler)(uint16,bool));
+                void HookMouseEvent(void (*handler)(bool,bool));
                 void KeyEvent(uint16 key, bool press);
+
+                void MouseEvent(bool left, bool press);
 
             private:
                 bool keys[KEY_COUNT];
-                void (*handlers[KEY_COUNT])(bool);
+                bool mousebuttons[MOUSE_BUTTON_MAX];
+                void (*handlers[KEY_COUNT])(uint16,bool);
+                void (*mousehandler)(bool,bool);
         } *Interface;
 
         // Drawing struct

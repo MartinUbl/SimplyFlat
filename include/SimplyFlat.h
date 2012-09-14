@@ -5,7 +5,11 @@
 #include <windows.h>
 #include <cmath>
 
+#include <vector>
+#include <map>
+
 #include <Defines.h>
+#include <Text.h>
 
 #include <gl\gl.h>
 #include <gl\glu.h>
@@ -33,6 +37,7 @@ class SimplyFlat
         void DestroyMainWindow();
         void ResizeMainWindow(uint32 width, uint32 height);
         void InitDrawing();
+        uint32 BuildFont(const char* fontFile, uint32 height);
         LRESULT CALLBACK SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         void BeforeDraw();
@@ -68,6 +73,13 @@ class SimplyFlat
                 void DrawRectangle(uint32 top, uint32 left, uint32 width, uint32 height, uint32 color);
                 void DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color);
                 void ClearColor(uint8 r, uint8 g, uint8 b);
+                void PrintText(uint32 fontId, uint32 x, uint32 y, const char *fmt, ...);
+
+                uint32 fontDataMapSize() { return m_fontDataMap.size(); }
+                void SetFontData(uint32 id, fontData* data) { if (fontDataMapSize() <= id) m_fontDataMap.resize(id+1); m_fontDataMap[id] = data; }
+
+            private:
+                std::vector<fontData*> m_fontDataMap;
         } *Drawing;
 
     private:
@@ -112,6 +124,6 @@ template <class T> T* SimplyFlatSingleton<T>::m_instance = NULL;
 
 #define SF sSimplyFlat
 #define SFDrawing SF->Drawing
-#define SFInterface SF->Interaface
+#define SFInterface SF->Interface
 
 #endif

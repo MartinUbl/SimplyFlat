@@ -72,7 +72,7 @@ void makeDisplayList(FT_Face face, char ch, GLuint list_base, GLuint *tex_base)
     glEndList();
 }
 
-void fontData::init(const char *filename, uint32 height)
+bool fontData::init(const char *fontOrFileName, uint32 height)
 {
     textures = new GLuint[128];
 
@@ -80,20 +80,20 @@ void fontData::init(const char *filename, uint32 height)
 
     FT_Library library;
     if (FT_Init_FreeType(&library))
-        return;
+        return false;
         //throw std::runtime_error("FT_Init_FreeType failed");
 
     FT_Face face;
 
     // if == 0, then OK, otherwise error
-    if (FT_New_Face(library, filename, 0, &face) != 0)
+    if (FT_New_Face(library, fontOrFileName, 0, &face) != 0)
     {
         HDC hDC = CreateCompatibleDC(NULL);
 
         HFONT hFont = CreateFont(0, 0, 0, 0, FW_DONTCARE, false,
                                                false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                                                CLIP_DEFAULT_PRECIS, 5,
-                                               VARIABLE_PITCH, filename);
+                                               VARIABLE_PITCH, fontOrFileName);
 
         if (hFont)
         {
@@ -103,7 +103,7 @@ void fontData::init(const char *filename, uint32 height)
             {
                 DeleteObject(hFont);
                 DeleteDC(hDC);
-                return;
+                return false;
             }
 
             uint8* data = new uint8[size];
@@ -112,19 +112,19 @@ void fontData::init(const char *filename, uint32 height)
             {
                 DeleteObject(hFont);
                 DeleteDC(hDC);
-                return;
+                return false;
             }
 
             DeleteObject(hFont);
             DeleteDC(hDC);
 
             if (FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &face))
-                return;
+                return false;
         }
         else
         {
             DeleteDC(hDC);
-            return;
+            return false;
         }
     }
 
@@ -139,6 +139,8 @@ void fontData::init(const char *filename, uint32 height)
     FT_Done_Face(face);
 
     FT_Done_FreeType(library);
+
+    return true;
 }
 
 void fontData::cleanUp()

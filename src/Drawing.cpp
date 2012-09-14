@@ -12,16 +12,17 @@ void SimplyFlat::AfterDraw()
     SwapBuffers(hDC);
 }
 
-uint32 SimplyFlat::BuildFont(const char *fontFile, uint32 height)
+int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height)
 {
-    uint32 pos = Drawing->fontDataMapSize();
+    int32 pos = (int32)Drawing->fontDataMapSize();
 
     fontData* fd = new fontData;
-    fd->init(fontFile, height);
-
-    Drawing->SetFontData(pos, fd);
-
-    return pos;
+    if (fd->init(fontFileOrName, height))
+    {
+        Drawing->SetFontData(pos, fd);
+        return pos;
+    }
+    return -1;
 }
 
 void SimplyFlat::t_Drawing::DrawRectangle(uint32 top, uint32 left, uint32 width, uint32 height, uint32 color)

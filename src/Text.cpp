@@ -54,20 +54,20 @@ void makeDisplayList(FT_Face face, char ch, GLuint list_base, GLuint *tex_base)
 
     glPushMatrix();
 
-    glTranslatef(bitmap_glyph->left,0,0);
-    glTranslatef(0,bitmap_glyph->top-bitmap.rows,0);
+    glTranslatef((GLfloat)bitmap_glyph->left,0,0);
+    glTranslatef(0,(GLfloat)bitmap_glyph->top-bitmap.rows,0);
 
     float x = (float)bitmap.width / (float)width;
     float y = (float)bitmap.rows / (float)height;
 
     glBegin(GL_QUADS);
-        glTexCoord2d(0,0); glVertex2f(0,bitmap.rows);
+        glTexCoord2d(0,0); glVertex2f(0,(GLfloat)bitmap.rows);
         glTexCoord2d(0,y); glVertex2f(0,0);
-        glTexCoord2d(x,y); glVertex2f(bitmap.width,0);
-        glTexCoord2d(x,0); glVertex2f(bitmap.width,bitmap.rows);
+        glTexCoord2d(x,y); glVertex2f((GLfloat)bitmap.width,0);
+        glTexCoord2d(x,0); glVertex2f((GLfloat)bitmap.width,(GLfloat)bitmap.rows);
     glEnd();
     glPopMatrix();
-    glTranslatef(face->glyph->advance.x >> 6 ,0,0);
+    glTranslatef((GLfloat)(face->glyph->advance.x >> 6),0,0);
 
     glEndList();
 }
@@ -76,7 +76,7 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
 {
     textures = new GLuint[128];
 
-    this->height = height;
+    this->height = (float)height;
 
     FT_Library library;
     if (FT_Init_FreeType(&library))
@@ -178,7 +178,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const c
     GLuint font = fd->listBase;
     float h = fd->height/.63f;
 
-    y -= fd->height;
+    y -= (uint32)fd->height;
 
     char text[256];
     va_list ap;
@@ -227,7 +227,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const c
     {
         glPushMatrix();
         glLoadIdentity();
-        glTranslatef(x,y-h*i,0);
+        glTranslatef((GLfloat)x,(GLfloat)(y-h*i),0);
         //glMultMatrixf(modelview_matrix);
 
         glCallLists(lines[i].length(), GL_UNSIGNED_BYTE, lines[i].c_str());

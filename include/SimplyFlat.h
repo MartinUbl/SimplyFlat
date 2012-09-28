@@ -64,6 +64,7 @@ class SimplyFlat
                 bool mousebuttons[MOUSE_BUTTON_MAX];
                 void (*handlers[KEY_COUNT])(uint16,bool);
                 void (*mousehandler)(bool,bool);
+                void (*allKeyHandler)(uint16,bool);
         } *Interface;
 
         // Drawing struct

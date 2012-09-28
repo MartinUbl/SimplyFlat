@@ -13,6 +13,7 @@ SimplyFlat::t_Interface::t_Interface()
         mousebuttons[i] = false;
 
     mousehandler = NULL;
+    allKeyHandler = NULL;
 }
 
 SimplyFlat::t_Interface::~t_Interface()
@@ -23,6 +24,12 @@ void SimplyFlat::t_Interface::HookEvent(uint16 key, void (*handler)(uint16,bool)
 {
     if (handler == NULL)
         return;
+
+    if (key == 0)
+    {
+        allKeyHandler = handler;
+        return;
+    }
 
     if (key > KEY_COUNT)
         return;
@@ -39,6 +46,8 @@ void SimplyFlat::t_Interface::KeyEvent(uint16 key, bool press)
     {
         keys[key] = press;
 
+        if (allKeyHandler != NULL)
+            (allKeyHandler)(key,press);
         if (handlers[key] != NULL)
             (handlers[key])(key,press);
     }

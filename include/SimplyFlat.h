@@ -37,7 +37,7 @@ class SimplyFlat
         void DestroyMainWindow();
         void ResizeMainWindow(uint32 width, uint32 height);
         void InitDrawing();
-        int32 BuildFont(const char* fontFile, uint32 height);
+        int32 BuildFont(const char* fontFile, uint32 height, uint16 bold = FW_DONTCARE, bool italic = false, bool underline = false, bool strikeout = false);
         LRESULT CALLBACK SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         void BeforeDraw();

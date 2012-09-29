@@ -72,7 +72,7 @@ void makeDisplayList(FT_Face face, char ch, GLuint list_base, GLuint *tex_base)
     glEndList();
 }
 
-bool fontData::init(const char *fontOrFileName, uint32 height)
+bool fontData::init(const char *fontOrFileName, uint32 height, uint16 bold, bool italic, bool underline, bool strikeout)
 {
     textures = new GLuint[128];
 
@@ -90,8 +90,8 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
     {
         HDC hDC = CreateCompatibleDC(NULL);
 
-        HFONT hFont = CreateFont(0, 0, 0, 0, FW_DONTCARE, false,
-                                               false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+        HFONT hFont = CreateFont(0, 0, 0, 0, bold, italic,
+                                               underline, strikeout, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                                                CLIP_DEFAULT_PRECIS, 5,
                                                VARIABLE_PITCH, fontOrFileName);
 

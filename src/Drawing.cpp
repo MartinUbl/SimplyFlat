@@ -12,12 +12,12 @@ void SimplyFlat::AfterDraw()
     SwapBuffers(hDC);
 }
 
-int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height)
+int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height, uint16 bold, bool italic, bool underline, bool strikeout)
 {
     int32 pos = (int32)Drawing->fontDataMapSize();
 
     fontData* fd = new fontData;
-    if (fd->init(fontFileOrName, height))
+    if (fd->init(fontFileOrName, height, bold, italic, underline, strikeout))
     {
         Drawing->SetFontData(pos, fd);
         return pos;

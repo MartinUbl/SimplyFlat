@@ -16,7 +16,7 @@ struct fontData
     GLuint* textures;
     GLuint listBase;
 
-    bool init(const char* fontOrFileName, uint32 height);
+    bool init(const char* fontOrFileName, uint32 height, uint16 bold = FW_DONTCARE, bool italic = false, bool underline = false, bool strikeout = false);
     void cleanUp();
 };
 

@@ -13,6 +13,7 @@
 
 #include <gl\gl.h>
 #include <gl\glu.h>
+#include "..\dep\SOIL\SOIL.h"
 
 #define M_PI 3.1415926f
 
@@ -71,7 +72,7 @@ class SimplyFlat
         struct t_Drawing
         {
             public:
-                void DrawRectangle(uint32 top, uint32 left, uint32 width, uint32 height, uint32 color);
+                void DrawRectangle(uint32 top, uint32 left, uint32 width, uint32 height, uint32 color, uint32 texture = 0);
                 void DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color);
                 void ClearColor(uint8 r, uint8 g, uint8 b);
                 void PrintText(uint32 fontId, uint32 x, uint32 y, const char *fmt, ...);
@@ -82,6 +83,16 @@ class SimplyFlat
             private:
                 std::vector<fontData*> m_fontDataMap;
         } *Drawing;
+
+        struct t_TextureStorage
+        {
+            public:
+                uint32 LoadTexture(const char* path, uint32 flags);
+                uint32 GetGLTextureID(uint32 id);
+
+            private:
+                std::vector<uint32> m_textureMap;
+        } *TextureStorage;
 
     private:
         HDC       hDC;

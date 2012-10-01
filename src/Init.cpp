@@ -5,6 +5,7 @@ SimplyFlat::SimplyFlat()
 {
     Interface = new t_Interface;
     Drawing = new t_Drawing;
+    TextureStorage = new t_TextureStorage;
 }
 
 SimplyFlat::~SimplyFlat()
@@ -14,6 +15,9 @@ SimplyFlat::~SimplyFlat()
 
     if (Drawing)
         delete Drawing;
+
+    if (TextureStorage)
+        delete TextureStorage;
 }
 
 void SimplyFlat::InitDrawing()

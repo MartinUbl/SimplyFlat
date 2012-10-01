@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./include"
+				AdditionalIncludeDirectories="./include;./dep/SOIL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -170,6 +170,10 @@
 				RelativePath=".\src\Text.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\Textures.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="include"
@@ -186,6 +190,50 @@
 			</File>
 			<File
 				RelativePath=".\include\Text.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="dep"
+			>
+			<File
+				RelativePath=".\dep\SOIL\image_DXT.c"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\image_DXT.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\image_helper.c"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\image_helper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\SOIL.c"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\SOIL.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\stb_image_aug.c"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\stb_image_aug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\stbi_DDS_aug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\dep\SOIL\stbi_DDS_aug_c.h"
 				>
 			</File>
 		</Filter>

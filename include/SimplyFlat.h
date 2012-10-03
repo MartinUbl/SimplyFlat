@@ -72,7 +72,7 @@ class SimplyFlat
         struct t_Drawing
         {
             public:
-                void DrawRectangle(uint32 top, uint32 left, uint32 width, uint32 height, uint32 color, uint32 texture = 0);
+                void DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture = 0);
                 void DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color);
                 void ClearColor(uint8 r, uint8 g, uint8 b);
                 void PrintText(uint32 fontId, uint32 x, uint32 y, const char *fmt, ...);

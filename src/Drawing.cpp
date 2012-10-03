@@ -25,7 +25,7 @@ int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height, uint16 bo
     return -1;
 }
 
-void SimplyFlat::t_Drawing::DrawRectangle(uint32 top, uint32 left, uint32 width, uint32 height, uint32 color, uint32 texture)
+void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture)
 {
     if (texture > 0 && SF->TextureStorage->GetGLTextureID(texture) > 0)
     {
@@ -40,10 +40,10 @@ void SimplyFlat::t_Drawing::DrawRectangle(uint32 top, uint32 left, uint32 width,
     }
 
     glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f); glVertex2d(top, left);
-        glTexCoord2f(0.0f, 1.0f); glVertex2d(top, left+width);
-        glTexCoord2f(1.0f, 1.0f); glVertex2d(top+height, left+width);
-        glTexCoord2f(1.0f, 0.0f); glVertex2d(top+height, left);
+        glTexCoord2f(0.0f, 0.0f); glVertex2d(x, y);
+        glTexCoord2f(1.0f, 0.0f); glVertex2d(x+width, y);
+        glTexCoord2f(1.0f, 1.0f); glVertex2d(x+width, y+height);
+        glTexCoord2f(0.0f, 1.0f); glVertex2d(x, y+height);
     glEnd();
 }
 

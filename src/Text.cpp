@@ -134,7 +134,46 @@ bool fontData::init(const char *fontOrFileName, uint32 height, uint16 bold, bool
         strcat(buf, ".ttf");
 
         if (FT_New_Face(library, buf, 0, &face) != 0)
-            return false;
+        {
+            HDC hDC = CreateCompatibleDC(NULL);
+
+            HFONT hFont = CreateFont(0, 0, 0, 0, bold, italic,
+                                                   underline, strikeout, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                                                   CLIP_DEFAULT_PRECIS, 5,
+                                                   VARIABLE_PITCH, fontOrFileName);
+
+            if (hFont)
+            {
+                SelectObject(hDC, hFont);
+                uint32 size = GetFontData(hDC, 0, 0, NULL, 0);
+                if (size == GDI_ERROR)
+                {
+                    DeleteObject(hFont);
+                    DeleteDC(hDC);
+                    return false;
+                }
+
+                uint8* data = new uint8[size];
+                uint32 res = GetFontData(hDC, 0, 0, data, size);
+                if (res == GDI_ERROR)
+                {
+                    DeleteObject(hFont);
+                    DeleteDC(hDC);
+                    return false;
+                }
+
+                DeleteObject(hFont);
+                DeleteDC(hDC);
+
+                if (FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &face))
+                    return false;
+            }
+            else
+            {
+                DeleteDC(hDC);
+                return false;
+            }
+        }
     }
 
     FT_Set_Char_Size(face, height << 6, height << 6, 96, 96);

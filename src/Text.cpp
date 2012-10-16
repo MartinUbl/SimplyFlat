@@ -53,7 +53,7 @@ void fontData::makeDisplayList(unsigned short ch)
     // note .5f
     float ih = 1.0f/((float)height);
     float width = ((float)divpow2(m_face->glyph->advance.x, 7))*ih;
-    float aHeight = max(pheight,(.5f*(float)bitmap.rows)*ih);
+    float aHeight = max(pheight,((float)bitmap.rows)*ih);
 
     glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
 
@@ -85,8 +85,8 @@ void fontData::makeDisplayList(unsigned short ch)
     glPushMatrix();
 
     // adjust position to account for texture padding
-    glTranslatef(.5f*(float)bitmap_glyph->left, 0.0f, 0.0f);
-    glTranslatef(0.0f, .5f*(float)(bitmap_glyph->top-bitmap.rows), 0.0f);
+    glTranslatef((float)bitmap_glyph->left, 0.0f, 0.0f);
+    glTranslatef(0.0f, (float)(bitmap_glyph->top-bitmap.rows), 0.0f);
 
     // work out texcoords
     float tx=((float)bitmap.width)/((float)pwidth);
@@ -96,20 +96,20 @@ void fontData::makeDisplayList(unsigned short ch)
     // note .5f
     glBegin(GL_QUADS);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(0.0f, .5f*(float)bitmap.rows);
+        glVertex2f(0.0f, (float)bitmap.rows);
         glTexCoord2f(0.0f, ty);
         glVertex2f(0.0f, 0.0f);
         glTexCoord2f(tx, ty);
-        glVertex2f(.5f*(float)bitmap.width, 0.0f);
+        glVertex2f((float)bitmap.width, 0.0f);
         glTexCoord2f(tx, 0.0f);
-        glVertex2f(.5f*(float)bitmap.width, .5f*(float)bitmap.rows);
+        glVertex2f((float)bitmap.width, (float)bitmap.rows);
     glEnd();
 
     glPopMatrix();
 
     // move position for the next character
     // note extra div 2
-    glTranslatef((float)divpow2(m_face->glyph->advance.x, 7), 0.0f, 0.0f);
+    glTranslatef((float)divpow2(m_face->glyph->advance.x*2, 7), 0.0f, 0.0f);
 
     glEndList();
 }

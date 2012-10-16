@@ -141,21 +141,24 @@ bool fontData::init(const char *fontOrFileName, uint32 height, uint16 bold, bool
 
     m_face = face;
 
-    for (uint32 i = 0; i < 65536; i++)
+    // For now, render only first 256 characters to speed it up
+    for (uint32 i = 0; i < 256; i++)
         makeDisplayList(i);
-
-    FT_Done_Face(face);
-
-    FT_Done_FreeType(library);
 
     return true;
 }
 
 void fontData::cleanUp()
 {
-//    glDeleteLists(listBase,65536);
-//    glDeleteTextures(256,textures);
-//    delete [] textures;
+    FT_Done_Face(m_face);
+
+    for (uint32 i = 0; i < 65536; i++)
+    {
+        if (textures[i] != 0)
+            glDeleteTextures(1, &textures[i]);
+        if (listIDs[i] != 0)
+            glDeleteLists(listIDs[i], 1);
+    }
 }
 
 inline void pushScreenCoordinateMatrix(uint32* x, uint32* y) {
@@ -180,8 +183,6 @@ inline void pop_projection_matrix() {
 void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const wchar_t *fmt, ...)
 {
     fontData* fd = m_fontDataMap[fontId];
-
-    pushScreenCoordinateMatrix(&x, &y);
 
     //GLuint font = fd->listBase;
     float h = fd->height/.63f;
@@ -217,6 +218,19 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const w
 
     if (start_line)
         lines.push_back(start_line);
+
+    // Render additional characters if needed
+    for (int i = 0; i < lines.size(); i++)
+    {
+        const wchar_t *str = lines[i].c_str();
+        for (unsigned int j = 0; j < wcslen(str); j++)
+        {
+            if (fd->listIDs[str[j]] == 0)
+                fd->makeDisplayList(str[j]);
+        }
+    }
+
+    pushScreenCoordinateMatrix(&x, &y);
 
     glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
     glMatrixMode(GL_MODELVIEW);

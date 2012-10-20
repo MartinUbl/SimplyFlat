@@ -62,5 +62,5 @@ void SimplyFlat::t_Drawing::DrawCircle(uint32 center_x, uint32 center_y, float r
 
 void SimplyFlat::t_Drawing::ClearColor(uint8 r, uint8 g, uint8 b)
 {
-    glClearColor(r, g, b, 0);
+    glClearColor(GLclampf(r)/255.0f, GLclampf(g)/255.0f, GLclampf(b)/255.0f, 0);
 }

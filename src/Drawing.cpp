@@ -9,7 +9,11 @@ void SimplyFlat::BeforeDraw()
 
 void SimplyFlat::AfterDraw()
 {
+#ifdef _WIN32
     SwapBuffers(hDC);
+#else
+    glutSwapBuffers();
+#endif
 }
 
 int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height, uint16 bold, bool italic, bool underline, bool strikeout)

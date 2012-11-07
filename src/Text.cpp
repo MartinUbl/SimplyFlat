@@ -53,7 +53,7 @@ void fontData::makeDisplayList(unsigned short ch)
     // note .5f
     float ih = 1.0f/((float)height);
     float width = ((float)divpow2(m_face->glyph->advance.x, 7))*ih;
-    float aHeight = max(pheight,((float)bitmap.rows)*ih);
+    float aHeight = (pheight > ((float)bitmap.rows)*ih) ? pheight : ((float)bitmap.rows)*ih;
 
     glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
 
@@ -246,7 +246,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const w
     else
     {
         va_start(ap, fmt);
-            vswprintf(text, fmt, ap);
+            vswprintf(text, 99999999, fmt, ap);
         va_end(ap);
     }
 

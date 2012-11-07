@@ -296,6 +296,8 @@ bool SimplyFlat::CreateMainWindow(const char* title, uint32 width, uint32 height
     InitDrawing();
 
     glutDisplayFunc(drawingcallback);
+
+    return true;
 }
 
 void SimplyFlat::Run()
@@ -308,10 +310,15 @@ void SimplyFlat::DestroyMainWindow()
 {
     if (m_fullscreen)
     {
+#ifdef _WIN32
         ChangeDisplaySettings(NULL,0);
         ShowCursor(TRUE);
+#else
+        glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+#endif
     }
 
+#ifdef _WIN32
     if (hRC)
     {
         if(!wglMakeCurrent(NULL,NULL))
@@ -343,6 +350,7 @@ void SimplyFlat::DestroyMainWindow()
         MessageBox(NULL,"Could Not Unregister Class.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
         hInstance = NULL;
     }
+#endif
 }
 
 void SimplyFlat::ResizeMainWindow(uint32 width, uint32 height)

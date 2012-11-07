@@ -47,6 +47,7 @@ void SimplyFlat::InitDrawing()
     glLoadIdentity();
 }
 
+#ifdef _WIN32
 LRESULT CALLBACK SimplyFlat::SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -124,7 +125,11 @@ LRESULT CALLBACK SimplyFlat::SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
     return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
+#else
+//
+#endif
 
+#ifdef _WIN32
 bool SimplyFlat::CreateMainWindow(const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen, uint32 refreshrate, LRESULT (CALLBACK *WndProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam))
 {
     GLuint PixelFormat;
@@ -279,6 +284,25 @@ bool SimplyFlat::CreateMainWindow(const char* title, uint32 width, uint32 height
 
     return true;
 }
+#else
+bool SimplyFlat::CreateMainWindow(const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen, uint32 refreshrate, void (*drawingcallback)())
+{
+    glutInit(0, NULL);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+    glutInitWindowSize(width, height);
+    glutInitWindowPosition(0, 0);
+    glutCreateWindow(title);
+
+    InitDrawing();
+
+    glutDisplayFunc(drawingcallback);
+}
+
+void SimplyFlat::Run()
+{
+    glutMainLoop();
+}
+#endif
 
 void SimplyFlat::DestroyMainWindow()
 {

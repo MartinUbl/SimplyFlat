@@ -7,8 +7,12 @@
 #include <freetype/ftoutln.h>
 #include <freetype/fttrigon.h>
 
-#include <gl\gl.h>
-#include <gl\glu.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+#ifndef FW_DONTCARE
+  #define FW_DONTCARE 0
+#endif
 
 struct fontData
 {

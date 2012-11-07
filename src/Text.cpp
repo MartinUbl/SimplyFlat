@@ -127,6 +127,8 @@ bool fontData::init(const char *fontOrFileName, uint32 height, uint16 bold, bool
     // if == 0, then OK, otherwise error
     if (FT_New_Face(library, fontOrFileName, 0, &face) != 0)
     {
+        // Following code is suitable only for Windows
+#ifdef _WIN32
         char buf[1024];
         GetWindowsDirectoryA(buf,1024);
         strcat(buf, "\\fonts\\");
@@ -174,7 +176,15 @@ bool fontData::init(const char *fontOrFileName, uint32 height, uint16 bold, bool
                 return false;
             }
         }
+#else
+        return false;
+#endif
     }
+
+#ifndef _WIN32
+    if (bold > FW_DONTCARE)
+        face->style_flags |= FT_STYLE_FLAG_BOLD;
+#endif
 
     FT_Set_Char_Size(face, height << 6, height << 6, 96, 96);
 

@@ -1,8 +1,9 @@
 #ifndef SIMPLYFLAT_MAIN_HEADER
 #define SIMPLYFLAT_MAIN_HEADER
 
-// TODO: multiplatform macro
-#include <windows.h>
+#ifdef _WIN32
+  #include <windows.h>
+#endif
 #include <cmath>
 
 #include <vector>
@@ -11,11 +12,17 @@
 #include <Defines.h>
 #include <Text.h>
 
-#include <gl\gl.h>
-#include <gl\glu.h>
-#include "..\dep\SOIL\SOIL.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include "../dep/SOIL/SOIL.h"
 
-#define M_PI 3.1415926f
+#ifndef _WIN32
+  #include <GL/freeglut.h>
+#endif
+
+#ifndef M_PI
+  #define M_PI 3.1415926f
+#endif
 
 #define KEY_COUNT 256
 
@@ -34,12 +41,23 @@ class SimplyFlat
         SimplyFlat();
         ~SimplyFlat();
 
+#ifdef _WIN32
         bool CreateMainWindow(const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen = false, uint32 refreshrate = 60, LRESULT (CALLBACK *WndProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = NULL);
+#else
+        bool CreateMainWindow(const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen = false, uint32 refreshrate = 60, void (*drawingcallback)() = NULL);
+        void Run();
+#endif
+
         void DestroyMainWindow();
         void ResizeMainWindow(uint32 width, uint32 height);
         void InitDrawing();
         int32 BuildFont(const char* fontFile, uint32 height, uint16 bold = FW_DONTCARE, bool italic = false, bool underline = false, bool strikeout = false);
+
+#ifdef _WIN32
         LRESULT CALLBACK SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#else
+        //
+#endif
 
         void BeforeDraw();
         void AfterDraw();
@@ -95,10 +113,15 @@ class SimplyFlat
         } *TextureStorage;
 
     private:
+
+#ifdef _WIN32
+        // On Windows, we store this kind of stuff for later reuse
         HDC       hDC;
         HGLRC     hRC;
         HWND      hWnd;
         HINSTANCE hInstance;
+#endif
+
         bool      m_fullscreen;
 };
 

@@ -20,14 +20,14 @@ static inline int divpow2(int x, int divisor)
     return x;
 }
 
-void fontData::makeDisplayList(unsigned short ch)
+void fontData::makeDisplayList(unsigned short ch, FeatureArrayIndex index)
 {
     int i = (int)ch;
-    if (FT_Load_Glyph(m_face, FT_Get_Char_Index(m_face, i), FT_LOAD_DEFAULT))
+    if (FT_Load_Glyph(m_face[index], FT_Get_Char_Index(m_face[index], i), FT_LOAD_DEFAULT))
         return;
 
     FT_Glyph glyph;
-    if (FT_Get_Glyph(m_face->glyph, &glyph))
+    if (FT_Get_Glyph(m_face[index]->glyph, &glyph))
         return;
 
     FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
@@ -52,17 +52,17 @@ void fontData::makeDisplayList(unsigned short ch)
     // store char width and adjust max height
     // note .5f
     float ih = 1.0f/((float)height);
-    float width = ((float)divpow2(m_face->glyph->advance.x, 7))*ih;
+    float width = ((float)divpow2(m_face[index]->glyph->advance.x, 7))*ih;
     float aHeight = (pheight > ((float)bitmap.rows)*ih) ? pheight : ((float)bitmap.rows)*ih;
 
     glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
 
     // create gl texture
-    glGenTextures(1, &(textures[i]));
+    glGenTextures(1, &(textures[index][i]));
 
     glEnable(GL_TEXTURE_2D);
 
-    glBindTexture(GL_TEXTURE_2D, textures[i]);
+    glBindTexture(GL_TEXTURE_2D, textures[index][i]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -75,11 +75,11 @@ void fontData::makeDisplayList(unsigned short ch)
     delete[] expanded_data;
 
     // create display list
-    listIDs[i] = glGenLists(1);
+    listIDs[index][i] = glGenLists(1);
 
-    glNewList(listIDs[i], GL_COMPILE);
+    glNewList(listIDs[index][i], GL_COMPILE);
 
-    glBindTexture(GL_TEXTURE_2D, textures[i]);
+    glBindTexture(GL_TEXTURE_2D, textures[index][i]);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -109,12 +109,27 @@ void fontData::makeDisplayList(unsigned short ch)
 
     // move position for the next character
     // note extra div 2
-    glTranslatef((float)divpow2(m_face->glyph->advance.x*2, 7), 0.0f, 0.0f);
+    glTranslatef((float)divpow2(m_face[index]->glyph->advance.x*2, 7), 0.0f, 0.0f);
 
     glEndList();
 }
 
-bool fontData::init(const char *fontOrFileName, uint32 height, uint16 bold, bool italic, bool underline, bool strikeout)
+bool PrepareFontData(HDC* hDC, HFONT* fnt, uint32* size, uint8** data)
+{
+    SelectObject((*hDC), (*fnt));
+    (*size) = GetFontData((*hDC), 0, 0, NULL, 0);
+    if ((*size) == GDI_ERROR)
+        return false;
+
+    (*data) = new uint8[(*size)];
+    uint32 res = GetFontData((*hDC), 0, 0, (*data), (*size));
+    if (res == GDI_ERROR)
+        return false;
+
+    return true;
+}
+
+bool fontData::init(const char *fontOrFileName, uint32 height)
 {
     this->height = (float)height;
 
@@ -122,91 +137,123 @@ bool fontData::init(const char *fontOrFileName, uint32 height, uint16 bold, bool
     if (FT_Init_FreeType(&library))
         return false;
 
-    FT_Face face;
-
     // if == 0, then OK, otherwise error
-    if (FT_New_Face(library, fontOrFileName, 0, &face) != 0)
+    if (FT_New_Face(library, fontOrFileName, 0, &m_face[FA_NORMAL]) != 0)
     {
         // Following code is suitable only for Windows
 #ifdef _WIN32
-        char buf[1024];
-        GetWindowsDirectoryA(buf,1024);
-        strcat(buf, "\\fonts\\");
-        strcat(buf, fontOrFileName);
-        strcat(buf, ".ttf");
+        HDC hDC = CreateCompatibleDC(NULL);
 
-        if (FT_New_Face(library, buf, 0, &face) != 0)
+        HFONT hFont = CreateFont(0, 0, 0, 0, FW_DONTCARE, false,
+                                               false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                                               CLIP_DEFAULT_PRECIS, 5,
+                                               VARIABLE_PITCH, fontOrFileName);
+
+        if (hFont)
         {
-            HDC hDC = CreateCompatibleDC(NULL);
+            uint32 size;
+            uint8* data = NULL;
 
-            HFONT hFont = CreateFont(0, 0, 0, 0, bold, italic,
-                                                   underline, strikeout, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                                                   CLIP_DEFAULT_PRECIS, 5,
-                                                   VARIABLE_PITCH, fontOrFileName);
-
-            if (hFont)
+            if (!PrepareFontData(&hDC, &hFont, &size, &data))
             {
-                SelectObject(hDC, hFont);
-                uint32 size = GetFontData(hDC, 0, 0, NULL, 0);
-                if (size == GDI_ERROR)
-                {
-                    DeleteObject(hFont);
-                    DeleteDC(hDC);
-                    return false;
-                }
-
-                uint8* data = new uint8[size];
-                uint32 res = GetFontData(hDC, 0, 0, data, size);
-                if (res == GDI_ERROR)
-                {
-                    DeleteObject(hFont);
-                    DeleteDC(hDC);
-                    return false;
-                }
-
                 DeleteObject(hFont);
-                DeleteDC(hDC);
-
-                if (FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &face))
-                    return false;
-            }
-            else
-            {
                 DeleteDC(hDC);
                 return false;
             }
+
+            if (FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_NORMAL]))
+            {
+                DeleteObject(hFont);
+                DeleteDC(hDC);
+                return false;
+            }
+
+            LOGFONT fontAttributes = { 0 };
+            ::GetObject(hFont, sizeof(fontAttributes), &fontAttributes);
+            fontAttributes.lfWeight = FW_BOLD;
+
+            hFont = ::CreateFontIndirect(&fontAttributes);
+
+            if (!PrepareFontData(&hDC, &hFont, &size, &data))
+            {
+                DeleteObject(hFont);
+                DeleteDC(hDC);
+                return false;
+            }
+
+            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_BOLD]);
+
+            ::GetObject(hFont, sizeof(fontAttributes), &fontAttributes);
+            fontAttributes.lfItalic = TRUE;
+
+            hFont = ::CreateFontIndirect(&fontAttributes);
+
+            if (!PrepareFontData(&hDC, &hFont, &size, &data))
+            {
+                DeleteObject(hFont);
+                DeleteDC(hDC);
+                return false;
+            }
+
+            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_BOLD_AND_ITALIC]);
+
+            ::GetObject(hFont, sizeof(fontAttributes), &fontAttributes);
+            fontAttributes.lfWeight = FW_DONTCARE;
+            fontAttributes.lfItalic = TRUE;
+
+            hFont = ::CreateFontIndirect(&fontAttributes);
+
+            if (!PrepareFontData(&hDC, &hFont, &size, &data))
+            {
+                DeleteObject(hFont);
+                DeleteDC(hDC);
+                return false;
+            }
+
+            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_ITALIC]);
+
+            DeleteObject(hFont);
+            DeleteDC(hDC);
+        }
+        else
+        {
+            DeleteDC(hDC);
+            return false;
         }
 #else
         return false;
 #endif
     }
 
-#ifndef _WIN32
-    if (bold > FW_DONTCARE)
-        face->style_flags |= FT_STYLE_FLAG_BOLD;
-#endif
+    for (uint32 i = FA_NORMAL; i < MAX_FA; i++)
+        FT_Set_Char_Size(m_face[i], height << 6, height << 6, 96, 96);
 
-    FT_Set_Char_Size(face, height << 6, height << 6, 96, 96);
-
-    m_face = face;
-
-    // For now, render only first 256 characters to speed it up
+    // For now, render only first 256 characters (for each style) to speed it up
     for (uint32 i = 0; i < 256; i++)
-        makeDisplayList(i);
+    {
+        makeDisplayList(i, FA_NORMAL);
+        makeDisplayList(i, FA_BOLD);
+        makeDisplayList(i, FA_BOLD_AND_ITALIC);
+        makeDisplayList(i, FA_ITALIC);
+    }
 
     return true;
 }
 
 void fontData::cleanUp()
 {
-    FT_Done_Face(m_face);
+    for (uint32 i = FA_NORMAL; i < MAX_FA; i++)
+        FT_Done_Face(m_face[i]);
 
     for (uint32 i = 0; i < 65536; i++)
     {
-        if (textures[i] != 0)
-            glDeleteTextures(1, &textures[i]);
-        if (listIDs[i] != 0)
-            glDeleteLists(listIDs[i], 1);
+        for (uint32 j = FA_NORMAL; j < MAX_FA; j++)
+        {
+            if (textures[j][i] != 0)
+                glDeleteTextures(1, &textures[j][i]);
+            if (listIDs[j][i] != 0)
+                glDeleteLists(listIDs[j][i], 1);
+        }
     }
 }
 
@@ -229,7 +276,7 @@ inline void pop_projection_matrix() {
     glPopAttrib();
 }
 
-void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const wchar_t *fmt, ...)
+void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, FeatureArrayIndex feature, const wchar_t *fmt, ...)
 {
     fontData* fd = m_fontDataMap[fontId];
 
@@ -274,8 +321,8 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const w
         const wchar_t *str = lines[i].c_str();
         for (unsigned int j = 0; j < wcslen(str); j++)
         {
-            if (fd->listIDs[str[j]] == 0)
-                fd->makeDisplayList(str[j]);
+            if (fd->listIDs[feature][str[j]] == 0)
+                fd->makeDisplayList(str[j], feature);
         }
     }
 
@@ -299,7 +346,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, const w
         glListBase(0u);
         const wchar_t *str = lines[i].c_str();
         for (unsigned int j = 0; j < wcslen(str); j++)
-            glCallList(fd->listIDs[str[j]]);
+            glCallList(fd->listIDs[feature][str[j]]);
 
         glPopMatrix();
     }

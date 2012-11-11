@@ -21,7 +21,7 @@ int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height, uint16 bo
     int32 pos = (int32)Drawing->fontDataMapSize();
 
     fontData* fd = new fontData;
-    if (fd->init(fontFileOrName, height, bold, italic, underline, strikeout))
+    if (fd->init(fontFileOrName, height))
     {
         Drawing->SetFontData(pos, fd);
         return pos;

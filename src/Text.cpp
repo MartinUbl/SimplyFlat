@@ -20,8 +20,11 @@ static inline int divpow2(int x, int divisor)
     return x;
 }
 
-void fontData::makeDisplayList(unsigned short ch, FeatureArrayIndex index)
+void fontData::makeDisplayList(unsigned short ch, uint8 index)
 {
+    if (index >= MAX_FA)
+        return;
+
     int i = (int)ch;
     if (FT_Load_Glyph(m_face[index], FT_Get_Char_Index(m_face[index], i), FT_LOAD_DEFAULT))
         return;
@@ -112,6 +115,8 @@ void fontData::makeDisplayList(unsigned short ch, FeatureArrayIndex index)
     glTranslatef((float)divpow2(m_face[index]->glyph->advance.x*2, 7), 0.0f, 0.0f);
 
     glEndList();
+
+    charWidth[index][i] = divpow2(m_face[index]->glyph->advance.x*2, 7);
 }
 
 bool PrepareFontData(HDC* hDC, HFONT* fnt, uint32* size, uint8** data)
@@ -144,10 +149,10 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
 #ifdef _WIN32
         HDC hDC = CreateCompatibleDC(NULL);
 
-        HFONT hFont = CreateFont(0, 0, 0, 0, FW_DONTCARE, false,
-                                               false, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                                               CLIP_DEFAULT_PRECIS, 5,
-                                               VARIABLE_PITCH, fontOrFileName);
+        HFONT hFont = CreateFont(height, 5, 0, 0, FW_DONTCARE, FALSE,
+                                                  FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+                                                  CLIP_TT_ALWAYS, CLEARTYPE_QUALITY,
+                                                  VARIABLE_PITCH, fontOrFileName);
 
         if (hFont)
         {
@@ -161,12 +166,17 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
                 return false;
             }
 
-            if (FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_NORMAL]))
+            FT_Face pf;
+
+            if (FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &pf))
             {
                 DeleteObject(hFont);
                 DeleteDC(hDC);
                 return false;
             }
+
+            m_face[FA_NORMAL] = pf;
+            pf = NULL;
 
             LOGFONT fontAttributes = { 0 };
             ::GetObject(hFont, sizeof(fontAttributes), &fontAttributes);
@@ -181,7 +191,10 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
                 return false;
             }
 
-            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_BOLD]);
+            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &pf);
+
+            m_face[FA_BOLD] = pf;
+            pf = NULL;
 
             ::GetObject(hFont, sizeof(fontAttributes), &fontAttributes);
             fontAttributes.lfItalic = TRUE;
@@ -195,7 +208,10 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
                 return false;
             }
 
-            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_BOLD_AND_ITALIC]);
+            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &pf);
+
+            m_face[FA_BOLD_AND_ITALIC] = pf;
+            pf = NULL;
 
             ::GetObject(hFont, sizeof(fontAttributes), &fontAttributes);
             fontAttributes.lfWeight = FW_DONTCARE;
@@ -210,7 +226,10 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
                 return false;
             }
 
-            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &m_face[FA_ITALIC]);
+            FT_New_Memory_Face(library, (FT_Byte*)data, size, 0, &pf);
+
+            m_face[FA_ITALIC] = pf;
+            pf = NULL;
 
             DeleteObject(hFont);
             DeleteDC(hDC);
@@ -276,12 +295,18 @@ inline void pop_projection_matrix() {
     glPopAttrib();
 }
 
-void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, FeatureArrayIndex feature, const wchar_t *fmt, ...)
+void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, const wchar_t *fmt, ...)
 {
     fontData* fd = m_fontDataMap[fontId];
 
     //GLuint font = fd->listBase;
     float h = fd->height/.63f;
+
+    bool underline = ((feature & FA_UNDERLINE) > 0);
+    bool strikeout = ((feature & FA_STRIKEOUT) > 0);
+
+    // Now we have to cut highest bits - leave only bits 0 and 1 (so it can make numbers 0,1,2,3 as index for printing)
+    feature &= (MAX_FA - 1);
 
     y -= (uint32)fd->height;
 
@@ -299,6 +324,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, Feature
 
     const wchar_t *start_line = text;
     std::vector<std::wstring> lines;
+    std::vector<uint32> lineWidths;
     for (const wchar_t *c = text; *c; c++)
     {
         if (*c == '\n')
@@ -313,7 +339,10 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, Feature
     }
 
     if (start_line)
+    {
         lines.push_back(start_line);
+        lineWidths.push_back(0);
+    }
 
     // Render additional characters if needed
     for (int i = 0; i < lines.size(); i++)
@@ -323,8 +352,15 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, Feature
         {
             if (fd->listIDs[feature][str[j]] == 0)
                 fd->makeDisplayList(str[j], feature);
+
+            lineWidths[i] += fd->charWidth[feature][str[j]];
         }
+
+        lineWidths[i] = (uint32)((float)lineWidths[i]);
     }
+
+    uint32 origX = x;
+    uint32 origY = y;
 
     pushScreenCoordinateMatrix(&x, &y);
 
@@ -345,6 +381,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, Feature
 
         glListBase(0u);
         const wchar_t *str = lines[i].c_str();
+
         for (unsigned int j = 0; j < wcslen(str); j++)
             glCallList(fd->listIDs[feature][str[j]]);
 
@@ -354,4 +391,54 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, Feature
     glPopAttrib();
 
     pop_projection_matrix();
+
+    glLoadIdentity();
+
+    if (underline)
+    {
+        glDisable(GL_TEXTURE_2D);
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+
+        float upos = -float(divpow2(fd->m_face[feature]->underline_position*2, 8));
+        float thick = float(divpow2(fd->m_face[feature]->underline_thickness*2, 7));
+
+        for (uint32 i = 0; i < lineWidths.size(); i++)
+        {
+            if (lineWidths[i] > 0)
+            {
+                glBegin(GL_QUADS);
+                    glVertex2d(x,               origY+h*i+upos);
+                    glVertex2d(x+lineWidths[i], origY+h*i+upos);
+                    glVertex2d(x+lineWidths[i], origY+h*i+upos+thick);
+                    glVertex2d(x,               origY+h*i+upos+thick);
+                glEnd();
+            }
+        }
+    }
+
+    if (strikeout)
+    {
+        glDisable(GL_TEXTURE_2D);
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+
+        float upos = - float(fd->height) / 3;
+        float thick = float(divpow2(fd->m_face[feature]->underline_thickness*2, 7))*1.5f;
+
+        for (uint32 i = 0; i < lineWidths.size(); i++)
+        {
+            if (lineWidths[i] > 0)
+            {
+                float lineAdd = (float(lineWidths[i])/float(lines[i].size()))*0.35f;
+
+                glBegin(GL_QUADS);
+                    glVertex2d(x-lineAdd,                      origY+h*i+upos);
+                    glVertex2d(x+float(lineWidths[i])+lineAdd, origY+h*i+upos);
+                    glVertex2d(x+float(lineWidths[i])+lineAdd, origY+h*i+upos+thick);
+                    glVertex2d(x-lineAdd,                      origY+h*i+upos+thick);
+                glEnd();
+            }
+        }
+    }
 }

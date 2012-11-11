@@ -17,11 +17,15 @@
 
 enum FeatureArrayIndex
 {
-    FA_NORMAL = 0,
-    FA_BOLD   = 1,
-    FA_ITALIC = 2,
-    FA_BOLD_AND_ITALIC = 3,
-    MAX_FA    = 4
+    FA_NORMAL          = 0,
+    FA_BOLD            = 1 << 0,
+    FA_ITALIC          = 1 << 1,
+    FA_BOLD_AND_ITALIC = FA_BOLD | FA_ITALIC,
+    MAX_FA             = FA_BOLD_AND_ITALIC+1,
+
+    FA_UNDERLINE       = 1 << 2,
+    FA_STRIKEOUT       = 1 << 3,
+    MAX_NONFT_FA       = FA_STRIKEOUT + 1
 };
 
 struct fontData
@@ -32,19 +36,24 @@ struct fontData
         {
             for (uint32 j = FA_NORMAL; j < MAX_FA; j++)
             {
-                textures[j][i] = 0;
-                listIDs[j][i]  = 0;
+                textures[j][i]  = 0;
+                listIDs[j][i]   = 0;
+                charWidth[j][i] = 0;
             }
         }
+
+        for (uint32 i = 0; i < MAX_FA; i++)
+            m_face[i] = NULL;
     }
     float height;
     GLuint textures[MAX_FA][65536];
     GLuint listIDs[MAX_FA][65536];
+    uint16 charWidth[MAX_FA][65536];
 
     FT_Face m_face[MAX_FA];
 
     bool init(const char* fontOrFileName, uint32 height);
-    void makeDisplayList(unsigned short ch, FeatureArrayIndex index = FA_NORMAL);
+    void makeDisplayList(unsigned short ch, uint8 index = FA_NORMAL);
     void cleanUp();
 };
 

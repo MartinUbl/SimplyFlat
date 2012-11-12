@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <list>
 
 #include <Defines.h>
 #include <Text.h>
@@ -35,7 +36,12 @@ enum MouseButtons
     MOUSE_BUTTON_MAX
 };
 
-#define COLOR(r,g,b) (uint32(r) << 16 | uint32(g) << 8 | uint32(b))
+#define MAKE_COLOR_RGB(r,g,b) ((uint32(r) << 24) | (uint32(uint8(g)) << 16) | (uint32(uint8(b)) << 8))
+#define MAKE_COLOR_RGBA(r,g,b,a) ((uint32(r) << 24) | (uint32(uint8(g)) << 16) | (uint32(uint8(b)) << 8) | (uint8(a)))
+#define GET_COLOR_R(c) uint8(c >> 24)
+#define GET_COLOR_G(c) uint8(c >> 16)
+#define GET_COLOR_B(c) uint8(c >> 8)
+#define GET_COLOR_A(c) uint8(c)
 
 class SimplyFlat
 {
@@ -96,6 +102,7 @@ class SimplyFlat
                 void DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color);
                 void ClearColor(uint8 r, uint8 g, uint8 b);
                 void PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, const wchar_t *fmt, ...);
+                void PrintStyledText(uint32 x, uint32 y, StyledTextList* printList);
 
                 uint32 fontDataMapSize() { return m_fontDataMap.size(); }
                 void SetFontData(uint32 id, fontData* data) { if (fontDataMapSize() <= id) m_fontDataMap.resize(id+1); m_fontDataMap[id] = data; }

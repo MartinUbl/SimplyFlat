@@ -397,8 +397,6 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     if (underline)
     {
         glDisable(GL_TEXTURE_2D);
-        GLint viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
 
         float upos = -float(divpow2(fd->m_face[feature]->underline_position*2, 8));
         float thick = float(divpow2(fd->m_face[feature]->underline_thickness*2, 7));
@@ -420,8 +418,6 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     if (strikeout)
     {
         glDisable(GL_TEXTURE_2D);
-        GLint viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
 
         float upos = - float(fd->height) / 3;
         float thick = float(divpow2(fd->m_face[feature]->underline_thickness*2, 7))*1.5f;
@@ -441,4 +437,122 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
             }
         }
     }
+}
+
+void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, StyledTextList* printList)
+{
+    if (!printList || printList->empty())
+        return;
+
+    uint32 i, j;
+
+    // dynamically allocate fields to store needed data
+    fontData** fd = new fontData*[printList->size()];
+    float* h = new float[printList->size()];
+    bool* underline = new bool[printList->size()];
+    bool* strikeout = new bool[printList->size()];
+
+    for (i = 0; i < printList->size(); i++)
+    {
+        // If some of print elements are NULL (not valid), do not print anything - it's some kind of fault in function usage
+        if ((*printList)[i] == NULL)
+        {
+            delete[] fd;
+            delete[] h;
+            delete[] underline;
+            delete[] strikeout;
+            return;
+        }
+
+        fd[i] = m_fontDataMap[(*printList)[i]->fontId];
+        h[i] = fd[i]->height/.63f;
+        underline[i] = (((*printList)[i]->feature & FA_UNDERLINE) > 0);
+        strikeout[i] = (((*printList)[i]->feature & FA_STRIKEOUT) > 0);
+
+        // Now we have to cut highest bits - leave only bits 0 and 1 (so it can make numbers 0,1,2,3 as index for printing)
+        (*printList)[i]->feature &= (MAX_FA - 1);
+    }
+
+    // Render additional characters if needed
+    for (i = 0; i < printList->size(); i++)
+    {
+        const wchar_t *str = (*printList)[i]->text;
+
+        for (j = 0; j < wcslen(str); j++)
+        {
+            if (fd[i]->listIDs[(*printList)[i]->feature][str[j]] == 0)
+                fd[i]->makeDisplayList(str[j], (*printList)[i]->feature);
+        }
+    }
+
+    uint32 origX = x;
+    uint32 origY = y;
+
+    pushScreenCoordinateMatrix(&x, &y);
+
+    glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    uint32 line = 0;
+    j = 0;
+
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
+
+    for (i = 0; i < printList->size(); )
+    {
+        glListBase(0u);
+        const wchar_t *str = (*printList)[i]->text;
+
+        for (; j < wcslen(str); j++)
+        {
+            if (str[j] == L'\n')
+            {
+                line++;
+                j++;
+
+                glLoadIdentity();
+                glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
+                goto continueLabel;
+            }
+            glCallList(fd[i]->listIDs[(*printList)[i]->feature][str[j]]);
+        }
+
+        j = 0;
+
+        i++;
+
+continueLabel:;
+    }
+
+    glPopMatrix();
+
+    glPopAttrib();
+
+    pop_projection_matrix();
+
+    glLoadIdentity();
+
+/*
+    if (underline)
+    {
+
+    }
+
+    if (strikeout)
+    {
+
+    }
+*/
+
+    delete[] fd;
+    delete[] h;
+    delete[] underline;
+    delete[] strikeout;
 }

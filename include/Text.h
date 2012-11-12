@@ -57,4 +57,17 @@ struct fontData
     void cleanUp();
 };
 
+struct printTextData
+{
+    uint32 fontId;   // font ID of this text segment
+    uint8 feature;   // bold/italic/underline/strikeout
+
+    bool colorize;   // if set, rendering engine will use 'color' to determine output color
+    uint32 color;    // classical RGBA color
+
+    const wchar_t* text;
+};
+
+typedef std::vector<printTextData*> StyledTextList;
+
 #endif

@@ -59,6 +59,16 @@ struct fontData
 
 struct printTextData
 {
+    printTextData()
+    {
+        fontId = 0;
+        feature = 0;
+        colorize = false;
+        color = 0;
+
+        text = NULL;
+    }
+
     uint32 fontId;   // font ID of this text segment
     uint8 feature;   // bold/italic/underline/strikeout
 

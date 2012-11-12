@@ -75,7 +75,7 @@ struct printTextData
     bool colorize;   // if set, rendering engine will use 'color' to determine output color
     uint32 color;    // classical RGBA color
 
-    const wchar_t* text;
+    wchar_t* text;
 };
 
 typedef std::vector<printTextData*> StyledTextList;

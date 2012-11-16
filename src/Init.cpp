@@ -142,6 +142,9 @@ bool SimplyFlat::CreateMainWindow(const char* title, uint32 width, uint32 height
     WindowRect.top = (long)0;
     WindowRect.bottom = (long)height;
 
+    m_screenWidth = width;
+    m_screenHeight = height;
+
     m_fullscreen = fullscreen;
 
     hInstance            = GetModuleHandle(NULL);

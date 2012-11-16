@@ -28,6 +28,21 @@ enum FeatureArrayIndex
     MAX_NONFT_FA       = FA_STRIKEOUT + 1
 };
 
+enum WordWrapLimits
+{
+    WW_NO_WRAP     = -1,
+    WW_WRAP_CANVAS = 0
+};
+
+static const wchar_t* wrapAfterChar = L" ,.!?-:/\\";
+static bool IsWrapChar(wchar_t ch)
+{
+    for (uint32 i = 0; i < wcslen(wrapAfterChar); i++)
+        if (wrapAfterChar[i] == ch)
+            return true;
+    return false;
+}
+
 struct fontData
 {
     fontData()

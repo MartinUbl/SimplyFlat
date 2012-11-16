@@ -61,6 +61,9 @@ class SimplyFlat
         void InitDrawing();
         int32 BuildFont(const char* fontFile, uint32 height, uint16 bold = FW_DONTCARE, bool italic = false, bool underline = false, bool strikeout = false);
 
+        uint32 GetScreenWidth() { return m_screenWidth; };
+        uint32 GetScreenHeight() { return m_screenHeight; };
+
 #ifdef _WIN32
         LRESULT CALLBACK SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #else
@@ -101,8 +104,8 @@ class SimplyFlat
                 void DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture = 0);
                 void DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color);
                 void ClearColor(uint8 r, uint8 g, uint8 b);
-                void PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, const wchar_t *fmt, ...);
-                void PrintStyledText(uint32 x, uint32 y, StyledTextList* printList);
+                void PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...);
+                void PrintStyledText(uint32 x, uint32 y, int32 wordWrapLimit, StyledTextList* printList);
 
                 uint32 fontDataMapSize() { return m_fontDataMap.size(); }
                 void SetFontData(uint32 id, fontData* data) { if (fontDataMapSize() <= id) m_fontDataMap.resize(id+1); m_fontDataMap[id] = data; }
@@ -131,6 +134,8 @@ class SimplyFlat
         HINSTANCE hInstance;
 #endif
 
+        uint32    m_screenWidth;
+        uint32    m_screenHeight;
         bool      m_fullscreen;
 };
 

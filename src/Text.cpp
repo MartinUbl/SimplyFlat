@@ -295,9 +295,14 @@ inline void pop_projection_matrix() {
     glPopAttrib();
 }
 
-void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, const wchar_t *fmt, ...)
+void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...)
 {
+    if (wordWrapLimit == WW_WRAP_CANVAS)
+        wordWrapLimit = sSimplyFlat->GetScreenWidth();
+
     fontData* fd = m_fontDataMap[fontId];
+
+    uint32 i, k, linewidth, tmpwidth, line, chr;
 
     //GLuint font = fd->listBase;
     float h = fd->height/.63f;
@@ -310,53 +315,28 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
 
     y -= (uint32)fd->height;
 
-    wchar_t text[256];
+    wchar_t str[2048];
     va_list ap;
 
     if (fmt == NULL)
-        *text=0;
+        *str=0;
     else
     {
         va_start(ap, fmt);
-            vswprintf(text, 99999999, fmt, ap);
+            vswprintf(str, 99999999, fmt, ap);
         va_end(ap);
     }
 
-    const wchar_t *start_line = text;
-    std::vector<std::wstring> lines;
     std::vector<uint32> lineWidths;
-    for (const wchar_t *c = text; *c; c++)
-    {
-        if (*c == '\n')
-        {
-            std::wstring line;
-            for (const wchar_t *n = start_line; n < c; n++)
-                line.append(1,*n);
-
-            lines.push_back(line);
-            start_line = c+1;
-        }
-    }
-
-    if (start_line)
-    {
-        lines.push_back(start_line);
-        lineWidths.push_back(0);
-    }
+    std::vector<uint32> lineCharCount;
 
     // Render additional characters if needed
-    for (int i = 0; i < lines.size(); i++)
+    for (int i = 0; i < wcslen(str); i++)
     {
-        const wchar_t *str = lines[i].c_str();
-        for (unsigned int j = 0; j < wcslen(str); j++)
-        {
-            if (fd->listIDs[feature][str[j]] == 0)
-                fd->makeDisplayList(str[j], feature);
+        if (fd->listIDs[feature][str[i]] == 0)
+            fd->makeDisplayList(str[i], feature);
 
-            lineWidths[i] += fd->charWidth[feature][str[j]];
-        }
-
-        lineWidths[i] = (uint32)((float)lineWidths[i]);
+//        lineWidths[i] += fd->charWidth[feature][str[j]];
     }
 
     uint32 origX = x;
@@ -372,21 +352,77 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for (int i = 0; i < lines.size(); i++)
+
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef((GLfloat)x,(GLfloat)(y),0);
+
+    linewidth = 0;
+    line = 0;
+    chr = 0;
+    for (i = 0; i < wcslen(str); )
     {
-        glPushMatrix();
-        glLoadIdentity();
-        glTranslatef((GLfloat)x,(GLfloat)(y-h*i),0);
-        //glMultMatrixf(modelview_matrix);
+        if (wordWrapLimit != WW_NO_WRAP)
+        {
+            tmpwidth = 0;
+            if (IsWrapChar(str[i]) && i+1 < wcslen(str))
+            {
+                tmpwidth += fd->charWidth[feature][str[i]];
 
-        glListBase(0u);
-        const wchar_t *str = lines[i].c_str();
+                for (k = i+1; k < wcslen(str); k++)
+                {
+                    tmpwidth += fd->charWidth[feature][str[k]];
 
-        for (unsigned int j = 0; j < wcslen(str); j++)
-            glCallList(fd->listIDs[feature][str[j]]);
+                    if (IsWrapChar(str[k]))
+                        break;
+                }
 
-        glPopMatrix();
+                if (x+linewidth+tmpwidth > wordWrapLimit)
+                {
+                    glCallList(fd->listIDs[feature][str[i]]);
+                    line++;
+                    lineWidths.resize(line);
+                    lineWidths[line-1] = linewidth;
+                    linewidth = 0;
+                    i++;
+                    lineCharCount.resize(line);
+                    lineCharCount[line-1] = chr;
+                    chr = 0;
+
+                    glLoadIdentity();
+                    glTranslatef((GLfloat)x,(GLfloat)(y-h*line),0);
+                    continue;
+                }
+            }
+        }
+
+        if (str[i] == L'\n')
+        {
+            line++;
+            lineWidths.resize(line);
+            lineWidths[line-1] = linewidth;
+            linewidth = 0;
+            i++;
+            lineCharCount.resize(line);
+            lineCharCount[line-1] = chr;
+            chr = 0;
+
+            glLoadIdentity();
+            glTranslatef((GLfloat)x,(GLfloat)(y-h*line),0);
+            continue;
+        }
+        linewidth += fd->charWidth[feature][str[i]];
+        glCallList(fd->listIDs[feature][str[i]]);
+        chr++;
+        i++;
     }
+
+    lineWidths.resize(line+1);
+    lineWidths[line] = linewidth;
+    lineCharCount.resize(line+1);
+    lineCharCount[line] = chr;
+
+    glPopMatrix();
 
     glPopAttrib();
 
@@ -426,7 +462,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
         {
             if (lineWidths[i] > 0)
             {
-                float lineAdd = (float(lineWidths[i])/float(lines[i].size()))*0.35f;
+                float lineAdd = (float(lineWidths[i])/float(lineCharCount[i]))*0.35f;
 
                 glBegin(GL_QUADS);
                     glVertex2d(x-lineAdd,                      origY+h*i+upos);
@@ -439,12 +475,15 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     }
 }
 
-void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, StyledTextList* printList)
+void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLimit, StyledTextList* printList)
 {
     if (!printList || printList->empty())
         return;
 
-    uint32 i, j;
+    if (wordWrapLimit == WW_WRAP_CANVAS)
+        wordWrapLimit = sSimplyFlat->GetScreenWidth();
+
+    uint32 i, j, k, linewidth, tmpwidth;
 
     // dynamically allocate fields to store needed data
     fontData** fd = new fontData*[printList->size()];
@@ -505,6 +544,7 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, StyledTextList* 
     glLoadIdentity();
     glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
 
+    linewidth = 0;
     for (i = 0; i < printList->size(); )
     {
         if ((*printList)[i]->colorize)
@@ -515,15 +555,46 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, StyledTextList* 
 
         for (; j < wcslen(str); j++)
         {
+            if (wordWrapLimit != WW_NO_WRAP)
+            {
+                tmpwidth = 0;
+                if (IsWrapChar(str[j]) && j+1 < wcslen(str))
+                {
+                    tmpwidth += fd[i]->charWidth[(*printList)[i]->feature][str[j]];
+
+                    for (k = j+1; k < wcslen(str); k++)
+                    {
+                        tmpwidth += fd[i]->charWidth[(*printList)[i]->feature][str[k]];
+
+                        if (IsWrapChar(str[k]))
+                            break;
+                    }
+
+                    if (x+linewidth+tmpwidth > wordWrapLimit)
+                    {
+                        glCallList(fd[i]->listIDs[(*printList)[i]->feature][str[j]]);
+                        line++;
+                        linewidth = 0;
+                        j++;
+
+                        glLoadIdentity();
+                        glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
+                        goto continueLabel;
+                    }
+                }
+            }
+
             if (str[j] == L'\n')
             {
                 line++;
+                linewidth = 0;
                 j++;
 
                 glLoadIdentity();
                 glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
                 goto continueLabel;
             }
+            linewidth += fd[i]->charWidth[(*printList)[i]->feature][str[j]];
             glCallList(fd[i]->listIDs[(*printList)[i]->feature][str[j]]);
         }
 

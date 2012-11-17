@@ -36,6 +36,11 @@ enum MouseButtons
     MOUSE_BUTTON_MAX
 };
 
+enum CustomImageLoadFlags
+{
+    IMAGELOAD_GREYSCALE  = 1 << 11,
+};
+
 #define MAKE_COLOR_RGB(r,g,b) ((uint32(r) << 24) | (uint32(uint8(g)) << 16) | (uint32(uint8(b)) << 8))
 #define MAKE_COLOR_RGBA(r,g,b,a) ((uint32(r) << 24) | (uint32(uint8(g)) << 16) | (uint32(uint8(b)) << 8) | (uint8(a)))
 #define GET_COLOR_R(c) uint8(c >> 24)

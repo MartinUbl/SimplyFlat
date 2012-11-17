@@ -30,9 +30,9 @@ enum FeatureArrayIndex
 
 enum WordWrapLimits
 {
-    WW_PREWRAP     = -2,      // custom value flag for systems using SimplyFlat - framework itself ignores it
-    WW_NO_WRAP     = -1,
-    WW_WRAP_CANVAS = 0
+    WW_PREWRAP     = -INT_MAX+1,      // custom value flag for systems using SimplyFlat - framework itself ignores it
+    WW_NO_WRAP     = -INT_MAX+2,
+    WW_WRAP_CANVAS = -INT_MAX+3
 };
 
 static const wchar_t* wrapAfterChar = L" ,.!?-:/\\";

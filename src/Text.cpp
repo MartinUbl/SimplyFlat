@@ -303,7 +303,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
 
     // Sign for calculating with supplied beginning final x in wordWrapLimit instead of dynamic x
     bool wrapMovedStart = false;
-    if (wordWrapLimit < WW_NO_WRAP)
+    if (wordWrapLimit <= 0)
         wrapMovedStart = true;
 
     fontData* fd = m_fontDataMap[fontId];
@@ -492,7 +492,7 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
 
     // Sign for calculating with supplied beginning final x in wordWrapLimit instead of dynamic x
     bool wrapMovedStart = false;
-    if (wordWrapLimit < WW_NO_WRAP)
+    if (wordWrapLimit <= 0)
         wrapMovedStart = true;
 
     uint32 i, j, k, linewidth, tmpwidth;

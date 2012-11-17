@@ -30,6 +30,7 @@ enum FeatureArrayIndex
 
 enum WordWrapLimits
 {
+    WW_PREWRAP     = -2,      // custom value flag for systems using SimplyFlat - framework itself ignores it
     WW_NO_WRAP     = -1,
     WW_WRAP_CANVAS = 0
 };

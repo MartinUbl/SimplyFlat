@@ -297,8 +297,14 @@ inline void pop_projection_matrix() {
 
 void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...)
 {
+    uint32 canvasEnd = sSimplyFlat->GetScreenWidth();
     if (wordWrapLimit == WW_WRAP_CANVAS)
-        wordWrapLimit = sSimplyFlat->GetScreenWidth();
+        wordWrapLimit = canvasEnd;
+
+    // Sign for calculating with supplied beginning final x in wordWrapLimit instead of dynamic x
+    bool wrapMovedStart = false;
+    if (wordWrapLimit < WW_NO_WRAP)
+        wrapMovedStart = true;
 
     fontData* fd = m_fontDataMap[fontId];
 
@@ -377,7 +383,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
                         break;
                 }
 
-                if (x+linewidth+tmpwidth > wordWrapLimit)
+                if ((wrapMovedStart ? x : -wordWrapLimit)+linewidth+tmpwidth > (wrapMovedStart ? canvasEnd : wordWrapLimit))
                 {
                     glCallList(fd->listIDs[feature][str[i]]);
                     line++;
@@ -480,8 +486,14 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
     if (!printList || printList->empty())
         return;
 
+    uint32 canvasEnd = sSimplyFlat->GetScreenWidth();
     if (wordWrapLimit == WW_WRAP_CANVAS)
-        wordWrapLimit = sSimplyFlat->GetScreenWidth();
+        wordWrapLimit = canvasEnd;
+
+    // Sign for calculating with supplied beginning final x in wordWrapLimit instead of dynamic x
+    bool wrapMovedStart = false;
+    if (wordWrapLimit < WW_NO_WRAP)
+        wrapMovedStart = true;
 
     uint32 i, j, k, linewidth, tmpwidth;
 
@@ -570,7 +582,7 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
                             break;
                     }
 
-                    if (x+linewidth+tmpwidth > wordWrapLimit)
+                    if ((wrapMovedStart ? -wordWrapLimit : x)+linewidth+tmpwidth > (wrapMovedStart ? canvasEnd : wordWrapLimit))
                     {
                         glCallList(fd[i]->listIDs[(*printList)[i]->feature][str[j]]);
                         line++;

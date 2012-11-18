@@ -119,6 +119,7 @@ void fontData::makeDisplayList(unsigned short ch, uint8 index)
     charWidth[index][i] = divpow2(m_face[index]->glyph->advance.x*2, 7);
 }
 
+#ifdef _WIN32
 bool PrepareFontData(HDC* hDC, HFONT* fnt, uint32* size, uint8** data)
 {
     SelectObject((*hDC), (*fnt));
@@ -133,6 +134,7 @@ bool PrepareFontData(HDC* hDC, HFONT* fnt, uint32* size, uint8** data)
 
     return true;
 }
+#endif
 
 bool fontData::init(const char *fontOrFileName, uint32 height)
 {

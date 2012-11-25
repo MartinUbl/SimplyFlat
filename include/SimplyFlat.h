@@ -57,7 +57,7 @@ class SimplyFlat
 #ifdef _WIN32
         bool CreateMainWindow(const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen = false, uint32 refreshrate = 60, LRESULT (CALLBACK *WndProc)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = NULL);
 #else
-        bool CreateMainWindow(const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen = false, uint32 refreshrate = 60, void (*drawingcallback)() = NULL);
+        bool CreateMainWindow(int* orig_argc, char** orig_argv, const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen = false, uint32 refreshrate = 60, void (*drawingcallback)() = NULL);
         void Run();
 #endif
 

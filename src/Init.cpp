@@ -288,9 +288,9 @@ bool SimplyFlat::CreateMainWindow(const char* title, uint32 width, uint32 height
     return true;
 }
 #else
-bool SimplyFlat::CreateMainWindow(const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen, uint32 refreshrate, void (*drawingcallback)())
+bool SimplyFlat::CreateMainWindow(int* orig_argc, char** orig_argv, const char* title, uint32 width, uint32 height, uint8 colordepth, bool fullscreen, uint32 refreshrate, void (*drawingcallback)())
 {
-    glutInit(0, NULL);
+    glutInit(orig_argc, orig_argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(width, height);
     glutInitWindowPosition(0, 0);

@@ -48,6 +48,17 @@ enum CustomImageLoadFlags
 #define GET_COLOR_B(c) uint8(c >> 8)
 #define GET_COLOR_A(c) uint8(c)
 
+// square vertex options boolean flags
+// used i.e. for gradients
+#define VERT_LU 1 << 0 // left upper
+#define VERT_RU 1 << 1 // right upper
+#define VERT_LL 1 << 2 // left lower
+#define VERT_RL 1 << 3 // right lower
+#define VERT_TOP     VERT_LU | VERT_RU
+#define VERT_BOTTOM  VERT_LL | VERT_RL
+#define VERT_LEFT    VERT_LU | VERT_LL
+#define VERT_RIGHT   VERT_RU | VERT_RL
+
 class SimplyFlat
 {
     public:
@@ -111,6 +122,8 @@ class SimplyFlat
                 void ClearColor(uint8 r, uint8 g, uint8 b);
                 void PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...);
                 void PrintStyledText(uint32 x, uint32 y, int32 wordWrapLimit, StyledTextList* printList);
+
+                void DrawRectangleGradient(uint32 x, uint32 y, uint32 width, uint32 height, uint32 colorSrc, uint32 colorDst, uint8 vertexOptions);
 
                 uint32 fontDataMapSize() { return m_fontDataMap.size(); }
                 void SetFontData(uint32 id, fontData* data) { if (fontDataMapSize() <= id) m_fontDataMap.resize(id+1); m_fontDataMap[id] = data; }

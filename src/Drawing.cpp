@@ -40,7 +40,7 @@ void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint
     else
     {
         glDisable(GL_TEXTURE_2D);
-        glColor3ub(uint8(color >> 16), uint8(color >> 8), uint8(color));
+        glColor3ub(GET_COLOR_R(color), GET_COLOR_G(color), GET_COLOR_B(color));
     }
 
     glBegin(GL_QUADS);
@@ -49,6 +49,49 @@ void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint
         glTexCoord2f(1.0f, 1.0f); glVertex2d(x+width, y+height);
         glTexCoord2f(0.0f, 1.0f); glVertex2d(x, y+height);
     glEnd();
+}
+
+void SimplyFlat::t_Drawing::DrawRectangleGradient(uint32 x, uint32 y, uint32 width, uint32 height, uint32 colorSrc, uint32 colorDst, uint8 vertexOptions)
+{
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glColor4ub(GET_COLOR_R(colorSrc), GET_COLOR_G(colorSrc), GET_COLOR_B(colorSrc), GET_COLOR_A(colorSrc));
+
+    bool source = true;
+
+    #define TO_SRC_CLR glColor4ub(GET_COLOR_R(colorSrc), GET_COLOR_G(colorSrc), GET_COLOR_B(colorSrc), GET_COLOR_A(colorSrc))
+    #define TO_DST_CLR glColor4ub(GET_COLOR_R(colorDst), GET_COLOR_G(colorDst), GET_COLOR_B(colorDst), GET_COLOR_A(colorDst))
+
+    glBegin(GL_QUADS);
+        if (vertexOptions & VERT_LU)
+            TO_DST_CLR;
+        else
+            TO_SRC_CLR;
+        glTexCoord2f(0.0f, 0.0f); glVertex2d(x, y);
+
+        if (vertexOptions & VERT_RU)
+            TO_DST_CLR;
+        else
+            TO_SRC_CLR;
+        glTexCoord2f(1.0f, 0.0f); glVertex2d(x+width, y);
+
+        if (vertexOptions & VERT_RL)
+            TO_DST_CLR;
+        else
+            TO_SRC_CLR;
+        glTexCoord2f(1.0f, 1.0f); glVertex2d(x+width, y+height);
+
+        if (vertexOptions & VERT_LL)
+            TO_DST_CLR;
+        else
+            TO_SRC_CLR;
+        glTexCoord2f(0.0f, 1.0f); glVertex2d(x, y+height);
+    glEnd();
+
+    #undef TO_SRC_CLR
+    #undef TO_DST_CLR
 }
 
 void SimplyFlat::t_Drawing::DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color)

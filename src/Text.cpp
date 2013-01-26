@@ -53,7 +53,6 @@ void fontData::makeDisplayList(unsigned short ch, uint8 index)
     }
 
     // store char width and adjust max height
-    // note .5f
     float ih = 1.0f/((float)height);
     float width = ((float)divpow2(m_face[index]->glyph->advance.x, 7))*ih;
     float aHeight = (pheight > ((float)bitmap.rows)*ih) ? pheight : ((float)bitmap.rows)*ih;
@@ -89,23 +88,22 @@ void fontData::makeDisplayList(unsigned short ch, uint8 index)
 
     // adjust position to account for texture padding
     glTranslatef((float)bitmap_glyph->left, 0.0f, 0.0f);
-    glTranslatef(0.0f, (float)(bitmap_glyph->top-bitmap.rows), 0.0f);
+    glTranslatef(0.0f, (float)(-bitmap_glyph->top), 0.0f);
 
     // work out texcoords
     float tx=((float)bitmap.width)/((float)pwidth);
     float ty=((float)bitmap.rows)/((float)pheight);
 
     // render
-    // note .5f
     glBegin(GL_QUADS);
         glTexCoord2f(0.0f, 0.0f);
-        glVertex2f(0.0f, (float)bitmap.rows);
-        glTexCoord2f(0.0f, ty);
         glVertex2f(0.0f, 0.0f);
+        glTexCoord2f(0.0f, ty);
+        glVertex2f(0.0f, (float)bitmap.rows);
         glTexCoord2f(tx, ty);
-        glVertex2f((float)bitmap.width, 0.0f);
-        glTexCoord2f(tx, 0.0f);
         glVertex2f((float)bitmap.width, (float)bitmap.rows);
+        glTexCoord2f(tx, 0.0f);
+        glVertex2f((float)bitmap.width, 0.0f);
     glEnd();
 
     glPopMatrix();
@@ -278,25 +276,6 @@ void fontData::cleanUp()
     }
 }
 
-inline void pushScreenCoordinateMatrix(uint32* x, uint32* y) {
-    glPushAttrib(GL_TRANSFORM_BIT);
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(viewport[0], viewport[0]+viewport[2], viewport[1], viewport[3]);
-    (*y) = viewport[3] - (*y);
-    glPopAttrib();
-}
-
-inline void pop_projection_matrix() {
-    glPushAttrib(GL_TRANSFORM_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glPopAttrib();
-}
-
 void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...)
 {
     uint32 canvasEnd = sSimplyFlat->GetScreenWidth();
@@ -312,7 +291,6 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
 
     uint32 i, k, linewidth, tmpwidth, line, chr;
 
-    //GLuint font = fd->listBase;
     float h = fd->height/.63f;
 
     bool underline = ((feature & FA_UNDERLINE) > 0);
@@ -350,8 +328,6 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     uint32 origX = x;
     uint32 origY = y;
 
-    pushScreenCoordinateMatrix(&x, &y);
-
     glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
     glMatrixMode(GL_MODELVIEW);
     glDisable(GL_LIGHTING);
@@ -360,9 +336,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
     glPushMatrix();
-    glLoadIdentity();
     glTranslatef((GLfloat)x,(GLfloat)(y),0);
 
     linewidth = 0;
@@ -388,6 +362,9 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
                 if ((wrapMovedStart ? x : -wordWrapLimit)+linewidth+tmpwidth > (wrapMovedStart ? canvasEnd : wordWrapLimit))
                 {
                     glCallList(fd->listIDs[feature][str[i]]);
+
+                    glTranslatef(-(GLfloat)linewidth, h*(line+1), 0);
+
                     line++;
                     lineWidths.resize(line);
                     lineWidths[line-1] = linewidth;
@@ -397,8 +374,6 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
                     lineCharCount[line-1] = chr;
                     chr = 0;
 
-                    glLoadIdentity();
-                    glTranslatef((GLfloat)x,(GLfloat)(y-h*line),0);
                     continue;
                 }
             }
@@ -406,6 +381,8 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
 
         if (str[i] == L'\n')
         {
+            glTranslatef(-(GLfloat)linewidth, h*(line+1), 0);
+
             line++;
             lineWidths.resize(line);
             lineWidths[line-1] = linewidth;
@@ -415,8 +392,6 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
             lineCharCount[line-1] = chr;
             chr = 0;
 
-            glLoadIdentity();
-            glTranslatef((GLfloat)x,(GLfloat)(y-h*line),0);
             continue;
         }
         linewidth += fd->charWidth[feature][str[i]];
@@ -433,10 +408,6 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     glPopMatrix();
 
     glPopAttrib();
-
-    pop_projection_matrix();
-
-    glLoadIdentity();
 
     if (underline)
     {
@@ -541,8 +512,6 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
     uint32 origX = x;
     uint32 origY = y;
 
-    pushScreenCoordinateMatrix(&x, &y);
-
     glPushAttrib(GL_LIST_BIT | GL_CURRENT_BIT  | GL_ENABLE_BIT | GL_TRANSFORM_BIT);
     glMatrixMode(GL_MODELVIEW);
     glDisable(GL_LIGHTING);
@@ -555,8 +524,7 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
     j = 0;
 
     glPushMatrix();
-    glLoadIdentity();
-    glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
+    glTranslatef((GLfloat)x,(GLfloat)y,0);
 
     linewidth = 0;
     for (i = 0; i < printList->size(); )
@@ -587,12 +555,12 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
                     if ((wrapMovedStart ? -wordWrapLimit : x)+linewidth+tmpwidth > (wrapMovedStart ? canvasEnd : wordWrapLimit))
                     {
                         glCallList(fd[i]->listIDs[(*printList)[i]->feature][str[j]]);
+                        glTranslatef(-(GLfloat)linewidth, h[i]*(line+1), 0);
+
                         line++;
                         linewidth = 0;
                         j++;
 
-                        glLoadIdentity();
-                        glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
                         goto continueLabel;
                     }
                 }
@@ -600,12 +568,12 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
 
             if (str[j] == L'\n')
             {
+                glTranslatef(-(GLfloat)linewidth, h[i]*(line+1), 0);
+
                 line++;
                 linewidth = 0;
                 j++;
 
-                glLoadIdentity();
-                glTranslatef((GLfloat)x,(GLfloat)(y-h[i]*line),0);
                 goto continueLabel;
             }
             linewidth += fd[i]->charWidth[(*printList)[i]->feature][str[j]];
@@ -622,10 +590,6 @@ continueLabel:;
     glPopMatrix();
 
     glPopAttrib();
-
-    pop_projection_matrix();
-
-    glLoadIdentity();
 
 /*
     if (underline)

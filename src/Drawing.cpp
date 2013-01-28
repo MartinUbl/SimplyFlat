@@ -31,16 +31,22 @@ int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height, uint16 bo
 
 void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture)
 {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if (texture > 0 && SF->TextureStorage->GetGLTextureID(texture) > 0)
     {
-        glColor3ub(255, 255, 255);
+        if (color)
+            glColor4ub(GET_COLOR_R(color), GET_COLOR_G(color), GET_COLOR_B(color), GET_COLOR_A(color));
+        else
+            glColor3ub(255, 255, 255);
+
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D , SF->TextureStorage->GetGLTextureID(texture));
     }
     else
     {
         glDisable(GL_TEXTURE_2D);
-        glColor3ub(GET_COLOR_R(color), GET_COLOR_G(color), GET_COLOR_B(color));
+        glColor4ub(GET_COLOR_R(color), GET_COLOR_G(color), GET_COLOR_B(color), GET_COLOR_A(color));
     }
 
     glBegin(GL_QUADS);
@@ -49,6 +55,8 @@ void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint
         glTexCoord2f(1.0f, 1.0f); glVertex2d(x+width, y+height);
         glTexCoord2f(0.0f, 1.0f); glVertex2d(x, y+height);
     glEnd();
+
+    glDisable(GL_BLEND);
 }
 
 void SimplyFlat::t_Drawing::DrawRectangleGradient(uint32 x, uint32 y, uint32 width, uint32 height, uint32 colorSrc, uint32 colorDst, uint8 vertexOptions)

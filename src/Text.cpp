@@ -299,7 +299,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     // Now we have to cut highest bits - leave only bits 0 and 1 (so it can make numbers 0,1,2,3 as index for printing)
     feature &= (MAX_FA - 1);
 
-    y -= (uint32)fd->height;
+    y += (uint32)fd->height;
 
     wchar_t str[2048];
     va_list ap;
@@ -337,7 +337,7 @@ void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 f
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glPushMatrix();
-    glTranslatef((GLfloat)x,(GLfloat)(y),0);
+    glTranslatef((GLfloat)x,(GLfloat)y,0);
 
     linewidth = 0;
     line = 0;
@@ -476,6 +476,8 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
     bool* underline = new bool[printList->size()];
     bool* strikeout = new bool[printList->size()];
 
+    float highest = 0;
+
     for (i = 0; i < printList->size(); i++)
     {
         // If some of print elements are NULL (not valid), do not print anything - it's some kind of fault in function usage
@@ -493,9 +495,14 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
         underline[i] = (((*printList)[i]->feature & FA_UNDERLINE) > 0);
         strikeout[i] = (((*printList)[i]->feature & FA_STRIKEOUT) > 0);
 
+        if (fd[i]->height > highest)
+            highest = fd[i]->height;
+
         // Now we have to cut highest bits - leave only bits 0 and 1 (so it can make numbers 0,1,2,3 as index for printing)
         (*printList)[i]->feature &= (MAX_FA - 1);
     }
+
+    y += (uint32)highest;
 
     // Render additional characters if needed
     for (i = 0; i < printList->size(); i++)

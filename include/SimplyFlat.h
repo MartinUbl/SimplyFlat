@@ -117,6 +117,7 @@ class SimplyFlat
         struct t_Drawing
         {
             public:
+                t_Drawing();
                 void DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture = 0);
                 void DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color);
                 void ClearColor(uint8 r, uint8 g, uint8 b);
@@ -128,8 +129,15 @@ class SimplyFlat
                 uint32 fontDataMapSize() { return m_fontDataMap.size(); }
                 void SetFontData(uint32 id, fontData* data) { if (fontDataMapSize() <= id) m_fontDataMap.resize(id+1); m_fontDataMap[id] = data; }
 
+                uint32 GetTextWidth(uint32 fontId, uint32 feature, const wchar_t *fmt, ...);
+                uint32 GetFontHeight(uint32 fontId);
+
+                void SetFontPrecache(bool on) { m_fontPrecache = on; };
+                bool IsFontPrecaching() { return m_fontPrecache; };
+
             private:
                 std::vector<fontData*> m_fontDataMap;
+                bool m_fontPrecache;
         } *Drawing;
 
         struct t_TextureStorage

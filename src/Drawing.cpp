@@ -29,6 +29,11 @@ int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height, uint16 bo
     return -1;
 }
 
+SimplyFlat::t_Drawing::t_Drawing()
+{
+    m_fontPrecache = true;
+}
+
 void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture)
 {
     glEnable(GL_BLEND);

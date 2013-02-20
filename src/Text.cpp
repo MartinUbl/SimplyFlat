@@ -41,6 +41,12 @@ void fontData::makeDisplayList(unsigned short ch, uint8 index)
     int pwidth = next_p2(bitmap.width);
     int pheight = next_p2(bitmap.rows);
 
+    // the minimum character width/height is 2
+    if (pwidth < 2)
+        pwidth = 2;
+    if (pheight < 2)
+        pheight = 2;
+
     GLubyte* expanded_data = new GLubyte[2 * pwidth * pheight];
 
     for (int j = 0; j < pheight ; j++)
@@ -248,12 +254,15 @@ bool fontData::init(const char *fontOrFileName, uint32 height)
         FT_Set_Char_Size(m_face[i], height << 6, height << 6, 96, 96);
 
     // For now, render only first 256 characters (for each style) to speed it up
-    for (uint32 i = 0; i < 256; i++)
+    if (SF->Drawing->IsFontPrecaching())
     {
-        makeDisplayList(i, FA_NORMAL);
-        makeDisplayList(i, FA_BOLD);
-        makeDisplayList(i, FA_BOLD_AND_ITALIC);
-        makeDisplayList(i, FA_ITALIC);
+        for (uint32 i = 0; i < 256; i++)
+        {
+            makeDisplayList(i, FA_NORMAL);
+            makeDisplayList(i, FA_BOLD);
+            makeDisplayList(i, FA_BOLD_AND_ITALIC);
+            makeDisplayList(i, FA_ITALIC);
+        }
     }
 
     return true;
@@ -614,4 +623,41 @@ continueLabel:;
     delete[] h;
     delete[] underline;
     delete[] strikeout;
+}
+
+uint32 SimplyFlat::t_Drawing::GetTextWidth(uint32 fontId, uint32 feature, const wchar_t *fmt, ...)
+{
+    fontData* fd = m_fontDataMap[fontId];
+    feature &= (MAX_FA - 1);
+
+    wchar_t str[2048];
+    va_list ap;
+
+    if (fmt == NULL)
+        *str=0;
+    else
+    {
+        va_start(ap, fmt);
+            vswprintf(str, 99999999, fmt, ap);
+        va_end(ap);
+    }
+
+    uint32 width = 0;
+
+    for (uint32 i = 0; i < wcslen(str); i++)
+    {
+        if (fd->listIDs[feature][str[i]] == 0)
+            fd->makeDisplayList(str[i], feature);
+
+        width += fd->charWidth[feature][str[i]];
+    }
+
+    return width;
+}
+
+uint32 SimplyFlat::t_Drawing::GetFontHeight(uint32 fontId)
+{
+    fontData* fd = m_fontDataMap[fontId];
+
+    return (uint32)fd->height;
 }

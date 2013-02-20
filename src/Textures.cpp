@@ -19,6 +19,8 @@ uint32 SimplyFlat::t_TextureStorage::LoadTexture(const char* path, uint32 flags)
     uint32 id = m_textureMap.size();
     m_textureMap.resize(id+1);
 
+    flags |= SOIL_FLAG_MIPMAPS;
+
     m_textureMap[id] = SOIL_load_OGL_texture(path, channels, SOIL_CREATE_NEW_ID, flags);
 
     return id;

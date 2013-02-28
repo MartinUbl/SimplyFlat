@@ -546,7 +546,7 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
     for (i = 0; i < printList->size(); )
     {
         if ((*printList)[i]->colorize)
-            glColor3ub(GET_COLOR_R((*printList)[i]->color), GET_COLOR_G((*printList)[i]->color), GET_COLOR_B((*printList)[i]->color));
+            glColor4ub(GET_COLOR_R((*printList)[i]->color), GET_COLOR_G((*printList)[i]->color), GET_COLOR_B((*printList)[i]->color), GET_COLOR_A((*printList)[i]->color));
 
         glListBase(0u);
         const wchar_t *str = (*printList)[i]->text;

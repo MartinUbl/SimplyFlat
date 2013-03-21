@@ -85,7 +85,7 @@ struct printTextData
         text = NULL;
     }
 
-    uint32 fontId;   // font ID of this text segment
+    int32 fontId;    // font ID of this text segment
     uint8 feature;   // bold/italic/underline/strikeout
 
     bool colorize;   // if set, rendering engine will use 'color' to determine output color

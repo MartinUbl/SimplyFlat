@@ -5,10 +5,12 @@ void SimplyFlat::BeforeDraw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
+    Drawing->ApplyPersistentScale();
 }
 
 void SimplyFlat::AfterDraw()
 {
+    glLoadIdentity();
 #ifdef _WIN32
     SwapBuffers(hDC);
 #else
@@ -32,9 +34,10 @@ int32 SimplyFlat::BuildFont(const char *fontFileOrName, uint32 height, uint16 bo
 SimplyFlat::t_Drawing::t_Drawing()
 {
     m_fontPrecache = true;
+    m_persistentScale = 1.0f;
 }
 
-void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture)
+void SimplyFlat::t_Drawing::DrawRectangle(int32 x, int32 y, uint32 width, uint32 height, uint32 color, uint32 texture)
 {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -64,7 +67,7 @@ void SimplyFlat::t_Drawing::DrawRectangle(uint32 x, uint32 y, uint32 width, uint
     glDisable(GL_BLEND);
 }
 
-void SimplyFlat::t_Drawing::DrawRectangleGradient(uint32 x, uint32 y, uint32 width, uint32 height, uint32 colorSrc, uint32 colorDst, uint8 vertexOptions)
+void SimplyFlat::t_Drawing::DrawRectangleGradient(int32 x, int32 y, uint32 width, uint32 height, uint32 colorSrc, uint32 colorDst, uint8 vertexOptions)
 {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -123,4 +126,49 @@ void SimplyFlat::t_Drawing::DrawCircle(uint32 center_x, uint32 center_y, float r
 void SimplyFlat::t_Drawing::ClearColor(uint8 r, uint8 g, uint8 b)
 {
     glClearColor(GLclampf(r)/255.0f, GLclampf(g)/255.0f, GLclampf(b)/255.0f, 0);
+}
+
+void SimplyFlat::t_Drawing::ApplyPersistentScale()
+{
+    glScalef(m_persistentScale, m_persistentScale, m_persistentScale);
+}
+
+void SimplyFlat::t_Drawing::SetPersistentScale(float scale, bool stack)
+{
+    if (stack)
+        m_persistentScale *= scale;
+    else
+        m_persistentScale = scale;
+}
+
+void SimplyFlat::t_Drawing::PushMatrix()
+{
+    glPushMatrix();
+}
+
+void SimplyFlat::t_Drawing::PopMatrix()
+{
+    glPopMatrix();
+}
+
+void SimplyFlat::t_Drawing::DynamicOnetimeScale(float scale)
+{
+    glScalef(scale, scale, scale);
+}
+
+void SimplyFlat::t_Drawing::PersistentScaleTempState(bool apply)
+{
+    if (apply)
+        ApplyPersistentScale();
+    else
+        glScalef(1.0f, 1.0f, 1.0f);
+}
+
+template<typename T>
+void SimplyFlat::t_Drawing::ApplyPersistentScaleTo(T &src, bool inversed)
+{
+    if (inversed)
+        src = (T)(src * 1.0f/m_persistentScale);
+    else
+        src = (T)(src * m_persistentScale);
 }

@@ -285,11 +285,17 @@ void fontData::cleanUp()
     }
 }
 
-void SimplyFlat::t_Drawing::PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...)
+void SimplyFlat::t_Drawing::PrintText(int32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...)
 {
+    // do not allow to draw not rendered or saved font
+    if (fontId < 0 || m_fontDataMap.size() <= fontId)
+        return;
+
     uint32 canvasEnd = sSimplyFlat->GetScreenWidth();
     if (wordWrapLimit == WW_WRAP_CANVAS)
         wordWrapLimit = canvasEnd;
+
+    canvasEnd = (int32)(canvasEnd * 1.0f/m_persistentScale);
 
     // Sign for calculating with supplied beginning final x in wordWrapLimit instead of dynamic x
     bool wrapMovedStart = false;
@@ -472,6 +478,8 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
     if (wordWrapLimit == WW_WRAP_CANVAS)
         wordWrapLimit = canvasEnd;
 
+    canvasEnd = (int32)(canvasEnd * 1.0f/m_persistentScale);
+
     // Sign for calculating with supplied beginning final x in wordWrapLimit instead of dynamic x
     bool wrapMovedStart = false;
     if (wordWrapLimit <= 0)
@@ -490,7 +498,9 @@ void SimplyFlat::t_Drawing::PrintStyledText(uint32 x, uint32 y, int32 wordWrapLi
     for (i = 0; i < printList->size(); i++)
     {
         // If some of print elements are NULL (not valid), do not print anything - it's some kind of fault in function usage
-        if ((*printList)[i] == NULL)
+        if ((*printList)[i] == NULL
+            // or if some of the fonts aren't loaded yet, or they're invalid
+            || (*printList)[i]->fontId < 0 || m_fontDataMap.size() <= (*printList)[i]->fontId)
         {
             delete[] fd;
             delete[] h;
@@ -625,8 +635,11 @@ continueLabel:;
     delete[] strikeout;
 }
 
-uint32 SimplyFlat::t_Drawing::GetTextWidth(uint32 fontId, uint32 feature, const wchar_t *fmt, ...)
+uint32 SimplyFlat::t_Drawing::GetTextWidth(int32 fontId, uint32 feature, const wchar_t *fmt, ...)
 {
+    if (fontId < 0 || m_fontDataMap.size() <= fontId)
+        return 0;
+
     fontData* fd = m_fontDataMap[fontId];
     feature &= (MAX_FA - 1);
 
@@ -655,8 +668,11 @@ uint32 SimplyFlat::t_Drawing::GetTextWidth(uint32 fontId, uint32 feature, const 
     return width;
 }
 
-uint32 SimplyFlat::t_Drawing::GetFontHeight(uint32 fontId)
+uint32 SimplyFlat::t_Drawing::GetFontHeight(int32 fontId)
 {
+    if (fontId < 0 || m_fontDataMap.size() <= fontId)
+        return 0;
+
     fontData* fd = m_fontDataMap[fontId];
 
     return (uint32)fd->height;

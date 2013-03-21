@@ -118,26 +118,39 @@ class SimplyFlat
         {
             public:
                 t_Drawing();
-                void DrawRectangle(uint32 x, uint32 y, uint32 width, uint32 height, uint32 color, uint32 texture = 0);
+                void DrawRectangle(int32 x, int32 y, uint32 width, uint32 height, uint32 color, uint32 texture = 0);
                 void DrawCircle(uint32 center_x, uint32 center_y, float radius, uint32 color);
                 void ClearColor(uint8 r, uint8 g, uint8 b);
-                void PrintText(uint32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...);
+                void PrintText(int32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...);
                 void PrintStyledText(uint32 x, uint32 y, int32 wordWrapLimit, StyledTextList* printList);
 
-                void DrawRectangleGradient(uint32 x, uint32 y, uint32 width, uint32 height, uint32 colorSrc, uint32 colorDst, uint8 vertexOptions);
+                void DrawRectangleGradient(int32 x, int32 y, uint32 width, uint32 height, uint32 colorSrc, uint32 colorDst, uint8 vertexOptions);
 
                 uint32 fontDataMapSize() { return m_fontDataMap.size(); }
                 void SetFontData(uint32 id, fontData* data) { if (fontDataMapSize() <= id) m_fontDataMap.resize(id+1); m_fontDataMap[id] = data; }
 
-                uint32 GetTextWidth(uint32 fontId, uint32 feature, const wchar_t *fmt, ...);
-                uint32 GetFontHeight(uint32 fontId);
+                uint32 GetTextWidth(int32 fontId, uint32 feature, const wchar_t *fmt, ...);
+                uint32 GetFontHeight(int32 fontId);
 
                 void SetFontPrecache(bool on) { m_fontPrecache = on; };
                 bool IsFontPrecaching() { return m_fontPrecache; };
 
+                void SetPersistentScale(float scale, bool stack = false);
+                float GetPersistentScale() { return m_persistentScale; };
+                void ApplyPersistentScale();
+                void DynamicOnetimeScale(float scale);
+
+                template<typename T> void ApplyPersistentScaleTo(T &src, bool inversed = false);
+
+                void PersistentScaleTempState(bool apply);
+
+                void PushMatrix();
+                void PopMatrix();
+
             private:
                 std::vector<fontData*> m_fontDataMap;
                 bool m_fontPrecache;
+                float m_persistentScale;
         } *Drawing;
 
         struct t_TextureStorage

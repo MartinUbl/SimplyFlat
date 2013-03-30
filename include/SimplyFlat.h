@@ -158,6 +158,7 @@ class SimplyFlat
             public:
                 uint32 LoadTexture(const char* path, uint32 flags);
                 uint32 GetGLTextureID(uint32 id);
+                void DeleteTexture(uint32 id);
 
             private:
                 std::vector<uint32> m_textureMap;

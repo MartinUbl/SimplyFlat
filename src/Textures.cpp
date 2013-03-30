@@ -33,3 +33,9 @@ uint32 SimplyFlat::t_TextureStorage::GetGLTextureID(uint32 id)
 
     return m_textureMap[id];
 }
+
+void SimplyFlat::t_TextureStorage::DeleteTexture(uint32 id)
+{
+    if (uint32 gltexture = GetGLTextureID(id))
+        glDeleteTextures(1, &gltexture);
+}

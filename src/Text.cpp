@@ -285,7 +285,7 @@ void fontData::cleanUp()
     }
 }
 
-void SimplyFlat::t_Drawing::PrintText(int32 fontId, uint32 x, uint32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...)
+void SimplyFlat::t_Drawing::PrintText(int32 fontId, int32 x, int32 y, uint8 feature, int32 wordWrapLimit, const wchar_t *fmt, ...)
 {
     // do not allow to draw not rendered or saved font
     if (fontId < 0 || m_fontDataMap.size() <= fontId)
@@ -666,6 +666,46 @@ uint32 SimplyFlat::t_Drawing::GetTextWidth(int32 fontId, uint32 feature, const w
     }
 
     return width;
+}
+
+uint32 SimplyFlat::t_Drawing::GetTextAmountToWidth(int32 fontId, uint32 feature, uint32 width, const wchar_t *fmt, ...)
+{
+    if (fontId < 0 || m_fontDataMap.size() <= fontId)
+        return 0;
+
+    fontData* fd = m_fontDataMap[fontId];
+    feature &= (MAX_FA - 1);
+
+    wchar_t str[2048];
+    va_list ap;
+
+    if (fmt == NULL)
+        *str=0;
+    else
+    {
+        va_start(ap, fmt);
+            vswprintf(str, 99999999, fmt, ap);
+        va_end(ap);
+    }
+
+    uint32 pwidth = 0;
+
+    for (uint32 i = 0; i < wcslen(str); i++)
+    {
+        if (fd->listIDs[feature][str[i]] == 0)
+            fd->makeDisplayList(str[i], feature);
+
+        pwidth += fd->charWidth[feature][str[i]];
+        if (pwidth > width)
+        {
+            if (i > 0)
+                return (i-1);
+            else
+                return 0;
+        }
+    }
+
+    return wcslen(str);
 }
 
 uint32 SimplyFlat::t_Drawing::GetFontHeight(int32 fontId)

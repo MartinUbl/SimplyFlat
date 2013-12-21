@@ -102,12 +102,16 @@ class SimplyFlat
                 void HookEvent(uint16 key, void (*handler)(uint16,bool));
                 void HookMouseEvent(void (*handler)(bool,bool));
                 void KeyEvent(uint16 key, bool press);
+                void SetMouseXY(uint32 x, uint32 y);
+                uint32 GetMouseX();
+                uint32 GetMouseY();
 
                 void MouseEvent(bool left, bool press);
 
             private:
                 bool keys[KEY_COUNT];
                 bool mousebuttons[MOUSE_BUTTON_MAX];
+                uint32 mouseXY[2];
                 void (*handlers[KEY_COUNT])(uint16,bool);
                 void (*mousehandler)(bool,bool);
                 void (*allKeyHandler)(uint16,bool);

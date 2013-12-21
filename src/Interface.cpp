@@ -1,5 +1,6 @@
 #include <Defines.h>
 #include <SimplyFlat.h>
+#include <UIManager.h>
 
 SimplyFlat::t_Interface::t_Interface()
 {
@@ -57,6 +58,10 @@ void SimplyFlat::t_Interface::MouseEvent(bool left, bool press)
 {
     mousebuttons[left?MOUSE_BUTTON_LEFT:MOUSE_BUTTON_RIGHT] = press;
 
+    // UI manager has the privileged access to events
+    if (sUIManager->MouseClick(GetMouseX(), GetMouseY()))
+        return;
+
     if (mousehandler)
         mousehandler(left,press);
 }
@@ -64,4 +69,20 @@ void SimplyFlat::t_Interface::MouseEvent(bool left, bool press)
 void SimplyFlat::t_Interface::HookMouseEvent(void (*handler)(bool, bool))
 {
     mousehandler = handler;
+}
+
+void SimplyFlat::t_Interface::SetMouseXY(uint32 x, uint32 y)
+{
+    mouseXY[0] = x;
+    mouseXY[1] = y;
+}
+
+uint32 SimplyFlat::t_Interface::GetMouseX()
+{
+    return mouseXY[0];
+}
+
+uint32 SimplyFlat::t_Interface::GetMouseY()
+{
+    return mouseXY[1];
 }

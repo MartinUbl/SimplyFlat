@@ -79,6 +79,10 @@
     <ClCompile Include="dep\SOIL\image_helper.c" />
     <ClCompile Include="dep\SOIL\SOIL.c" />
     <ClCompile Include="dep\SOIL\stb_image_aug.c" />
+    <ClCompile Include="src\UI\UIManager.cpp" />
+    <ClCompile Include="src\UI\UI_Button.cpp" />
+    <ClCompile Include="src\UI\UI_Element.cpp" />
+    <ClCompile Include="src\UI\UI_Textbox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Defines.h" />
@@ -90,6 +94,8 @@
     <ClInclude Include="dep\SOIL\stb_image_aug.h" />
     <ClInclude Include="dep\SOIL\stbi_DDS_aug.h" />
     <ClInclude Include="dep\SOIL\stbi_DDS_aug_c.h" />
+    <ClInclude Include="include\UI.h" />
+    <ClInclude Include="include\UIManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

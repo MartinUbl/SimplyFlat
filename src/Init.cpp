@@ -113,6 +113,7 @@ LRESULT CALLBACK SimplyFlat::SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
         case WM_MOUSEMOVE:
         {
+            Interface->SetMouseXY(LOWORD(lParam), HIWORD(lParam));
             return 0;
         }
 

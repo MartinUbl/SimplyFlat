@@ -47,11 +47,19 @@ void SimplyFlat::t_Interface::KeyEvent(uint16 key, bool press)
     {
         keys[key] = press;
 
+        if (sUIManager->KeyPress(key, press, false))
+            return;
+
         if (allKeyHandler != NULL)
             (allKeyHandler)(key,press);
         if (handlers[key] != NULL)
             (handlers[key])(key,press);
     }
+}
+
+void SimplyFlat::t_Interface::PrintableCharEvent(uint16 key)
+{
+    sUIManager->KeyPress(key, true, true);
 }
 
 void SimplyFlat::t_Interface::MouseEvent(bool left, bool press)

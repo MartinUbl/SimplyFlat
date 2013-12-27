@@ -1,5 +1,6 @@
 #include <Defines.h>
 #include <SimplyFlat.h>
+#include <UIManager.h>
 
 SimplyFlat::SimplyFlat()
 {
@@ -79,6 +80,11 @@ LRESULT CALLBACK SimplyFlat::SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             Interface->KeyEvent(wParam, false);
             return 0;
         }
+        case WM_CHAR:
+        {
+            Interface->PrintableCharEvent(wParam);
+            return 0;
+        }
 
         case WM_LBUTTONDOWN:
         {
@@ -113,6 +119,7 @@ LRESULT CALLBACK SimplyFlat::SFWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
         case WM_MOUSEMOVE:
         {
+            sUIManager->MouseMove(LOWORD(lParam), HIWORD(lParam));
             Interface->SetMouseXY(LOWORD(lParam), HIWORD(lParam));
             return 0;
         }

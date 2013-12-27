@@ -102,6 +102,7 @@ class SimplyFlat
                 void HookEvent(uint16 key, void (*handler)(uint16,bool));
                 void HookMouseEvent(void (*handler)(bool,bool));
                 void KeyEvent(uint16 key, bool press);
+                void PrintableCharEvent(uint16 key);
                 void SetMouseXY(uint32 x, uint32 y);
                 uint32 GetMouseX();
                 uint32 GetMouseY();
@@ -135,6 +136,7 @@ class SimplyFlat
 
                 uint32 GetTextWidth(int32 fontId, uint32 feature, const wchar_t *fmt, ...);
                 uint32 GetTextAmountToWidth(int32 fontId, uint32 feature, uint32 width, const wchar_t *fmt, ...);
+                uint32 GetTextAmountToWidthFromEnd(int32 fontId, uint32 feature, uint32 width, const wchar_t *fmt, ...);
                 uint32 GetFontHeight(int32 fontId);
 
                 void SetFontPrecache(bool on) { m_fontPrecache = on; };

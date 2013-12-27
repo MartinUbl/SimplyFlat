@@ -2,8 +2,8 @@
 #include <UIManager.h>
 #include <UI.h>
 
-UI_Button::UI_Button(int32 x, int32 y, const wchar_t* text, int32 font, uint32 width, uint32 height, uint32 bgColor, uint32 textColor):
-    UI_Element(x, y, width, height)
+UI_Button::UI_Button(const char* name, int32 x, int32 y, const wchar_t* text, int32 font, uint32 width, uint32 height, uint32 bgColor, uint32 textColor):
+    UI_Element(name, x, y, width, height)
 {
     memset(&m_cached, 0, sizeof(m_cached));
     memset(&m_border, 0, sizeof(m_border));

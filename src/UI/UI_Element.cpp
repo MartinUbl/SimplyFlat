@@ -6,7 +6,7 @@
  * Base class UI_Element
  */
 
-UI_Element::UI_Element(int32 x, int32 y, uint32 width, uint32 height)
+UI_Element::UI_Element(const char* name, int32 x, int32 y, uint32 width, uint32 height)
 {
     m_toDelete = false;
 
@@ -15,6 +15,8 @@ UI_Element::UI_Element(int32 x, int32 y, uint32 width, uint32 height)
 
     m_width = width;
     m_height = height;
+
+    SetName(name);
 
     sUIManager->AddElement(this);
     // TODO: create event

@@ -82,6 +82,7 @@
     <ClCompile Include="src\UI\UIManager.cpp" />
     <ClCompile Include="src\UI\UI_Button.cpp" />
     <ClCompile Include="src\UI\UI_Element.cpp" />
+    <ClCompile Include="src\UI\UI_Label.cpp" />
     <ClCompile Include="src\UI\UI_Textbox.cpp" />
   </ItemGroup>
   <ItemGroup>
